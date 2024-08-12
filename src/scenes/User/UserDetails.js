@@ -5,9 +5,13 @@ import {
   Box,
   Snackbar,
   Avatar,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '@mui/material';
+import { EditNote } from '@mui/icons-material';
+import UserEditForUser from './UserEditForUser';
 
 const UserDetails = () => {
   const { id } = useParams();
@@ -18,6 +22,8 @@ const UserDetails = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarColor, setSnackbarColor] = useState('success');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const loadUserDetails = async () => {
     const accessToken = localStorage.getItem('accessToken');
@@ -29,13 +35,13 @@ const UserDetails = () => {
     try {
       const response = await axios.get(`http://localhost:8082/api/v1/users/get/${id}`, {
         headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       console.log('Response data:', response.data);
       const { data } = response.data;
-      console.log('User data:', data); // Added debug statement
+      console.log('User data:', data);
       setUserData(data);
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -58,6 +64,15 @@ const UserDetails = () => {
     setSnackbarOpen(true);
   };
 
+  const handleEditClick = () => {
+    setSelectedUserId(id);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false);
+  };
+
   return (
     <Box elevation={3}>
       {userData && (
@@ -65,7 +80,7 @@ const UserDetails = () => {
           <Box display="flex" flexDirection="row" alignItems="center" mb={2}>
             <Avatar
               alt="Profile Picture"
-              src={userData.profilePicture} // Assuming you have a profilePicture URL in your data
+              src={userData.profilePicture}
               sx={{ width: 80, height: 80, marginRight: 2 }}
             />
             <Box>
@@ -77,6 +92,11 @@ const UserDetails = () => {
               </Typography>
             </Box>
           </Box>
+          <Tooltip title="Edit your details">
+            <IconButton color="info" onClick={handleEditClick}>
+              <EditNote sx={{ fontSize: 50 }} />
+            </IconButton>
+          </Tooltip>
           <Box display="flex">
             <Box flex="1">
               <Typography variant="h6">USER DETAILS</Typography>
@@ -111,27 +131,25 @@ const UserDetails = () => {
             <Box flex="1">
               <ul>
                 <strong style={{ marginLeft: '4px' }}>DEVICES OF USER:</strong>
-                {userData.devices && userData.devices
-                 
-                  .map((device, index) => (
-                    <li key={index}>
-                      <Typography variant="body1">
-                        <strong style={{ marginRight: '10px' }}> deviceName: </strong> {device.deviceName}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong style={{ marginRight: '10px' }} >device Number:</strong> {device.deviceNumber}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong style={{ marginRight: '10px' }} >manufactural:</strong> {device.manufactural}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong style={{ marginRight: '10px' }} >STATUS:</strong> {device.status}
-                      </Typography>
-                      <Typography variant="body1">
-                        <strong style={{ marginRight: '10px' }}>Assigned At:</strong> {device.createdAt}
-                      </Typography>
-                    </li>
-                  ))}
+                {userData.devices && userData.devices.map((device, index) => (
+                  <li key={index}>
+                    <Typography variant="body1">
+                      <strong style={{ marginRight: '10px' }}>Device Name:</strong> {device.deviceName}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong style={{ marginRight: '10px' }}>Device Number:</strong> {device.deviceNumber}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong style={{ marginRight: '10px' }}>Manufacturer:</strong> {device.manufacturer}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong style={{ marginRight: '10px' }}>Status:</strong> {device.status}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong style={{ marginRight: '10px' }}>Assigned At:</strong> {device.createdAt}
+                    </Typography>
+                  </li>
+                ))}
               </ul>
             </Box>
           </Box>
@@ -143,6 +161,12 @@ const UserDetails = () => {
         onClose={handleCloseSnackbar}
         message={snackbarMessage}
         sx={{ backgroundColor: snackbarColor }}
+      />
+
+      <UserEditForUser
+        open={editDialogOpen}
+        onClose={handleEditDialogClose}
+        userId={selectedUserId}
       />
     </Box>
   );

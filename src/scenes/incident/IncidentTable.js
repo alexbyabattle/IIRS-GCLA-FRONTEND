@@ -220,9 +220,7 @@ const IncidentTable = () => {
               <Delete style={{ color: "red" }} />
             </IconButton>
 
-            <IconButton color="info" onClick={() => openEditIncidentPage(row.id)} >
-              <EditOutlinedIcon />
-            </IconButton>
+            
 
             <IconButton color="success" onClick={() => openIncidentDetailsPage(row.id)} >
               <VisibilityOutlinedIcon style={{ color: "green" }} />

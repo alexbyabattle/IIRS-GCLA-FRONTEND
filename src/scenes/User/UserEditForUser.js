@@ -23,10 +23,10 @@ const checkoutSchema = yup.object().shape({
   location: yup.string().required('Required location'),
   status: yup.string().required('Required'),
   department: yup.string().required('department is required'),
-  role: yup.string().required('role is required'),
+  
 });
 
-const UserEditDialog = ({ userId, open, onClose, loadUsers }) => {
+const UserEditForUser = ({ userId, open, onClose, loadUsers }) => {
   console.log('Selected User ID for edit:', userId);
 
   const [userData, setUserData] = useState({});
@@ -36,7 +36,7 @@ const UserEditDialog = ({ userId, open, onClose, loadUsers }) => {
     location: '',
     status: '',
     department: '',
-    role: '',
+    
   });
 
   const fetchUserData = async (userId) => {
@@ -108,7 +108,7 @@ const UserEditDialog = ({ userId, open, onClose, loadUsers }) => {
             location: editedData.location,
             status: editedData.status,
             department: editedData.department,
-            role: editedData.role,
+            
             //dateTime: dayjs(),
           }}
           validationSchema={checkoutSchema}
@@ -172,20 +172,7 @@ const UserEditDialog = ({ userId, open, onClose, loadUsers }) => {
                     helperText={touched.department && errors.department}
                   />
                 </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    type="text"
-                    label="role"
-                    onBlur={handleBlur}
-                    onChange={handleInputChange}
-                    value={editedData.role}
-                    name="role"
-                    error={!!touched.role && !!errors.role}
-                    helperText={touched.role && errors.role}
-                  />
-                </Grid>
+                
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <Grid item xs={6}>
                     <div style={{ marginTop: '10px' }} />
@@ -218,4 +205,4 @@ const UserEditDialog = ({ userId, open, onClose, loadUsers }) => {
   );
 };
 
-export default UserEditDialog;
+export default UserEditForUser;

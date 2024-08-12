@@ -12,6 +12,7 @@ import DeleteDialog from '../incident/DeleteIncidentDialog';
 import IncidentDetailsDialog from './IncidentDetailsDialog';
 import EditRequestDetailsDialog from './EditRequestDetailsDialog';
 import ChangeIncidentStatusDialog from '../incident/ChangeIncidentStatusDialog';
+import EditIncidentDetailsDialog from './EditIncidentDetailsDialog';
 
 
 const Incidents = () => {
@@ -249,7 +250,7 @@ const Incidents = () => {
         onClose={closeIncidentDetailsDialog}
       />
 
-      <EditRequestDetailsDialog
+      <EditIncidentDetailsDialog
         id={selectedIncidentIdForEdit}
         open={isEditDialogOpen}
         onClose={closeIncidentEditDialog}
@@ -282,7 +283,7 @@ const Incidents = () => {
               borderBottom: theme.palette.mode === 'light' ? '1px solid #000000' : undefined, // Set border between each row to black in light mode
             },
             "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
-              color: `${colors.grey[0]} !important`,
+              color: `${colors.grey[100]} !important`,
             },
           }}
         >

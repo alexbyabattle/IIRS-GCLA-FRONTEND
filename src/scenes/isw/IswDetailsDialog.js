@@ -39,16 +39,16 @@ const IswDetailsDialog = ({ id, open, onClose }) => {
                   <strong>Incident Solving  way:</strong> {iswData.iswName}
               </Typography>
               <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                  <strong>Incident Causes:</strong>{iswData.incidentCausedBy}
+                  <strong  style={{ marginRight: '15px' }} >Incident Causes:</strong>{iswData.incidentCausedBy}    
               </Typography>
               <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                   <strong>Device to  replace:</strong>{iswData.deviceToReplace}
+                   <strong  style={{ marginRight: '15px' }} >Device to  replace:</strong>{iswData.deviceToReplace}
               </Typography>
               <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                  <strong>Incident Status:</strong>{iswData.incidentStatus}
+                  <strong  style={{ marginRight: '15px' }} >Incident Status:</strong>{iswData.incidentStatus}
               </Typography>
               <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                  <strong>Solved At:</strong>{iswData.createdAt}
+                  <strong  style={{ marginRight: '15px' }} >Solved At:</strong>{iswData.createdAt}
               </Typography>
             </Paper>
 
@@ -59,10 +59,16 @@ const IswDetailsDialog = ({ id, open, onClose }) => {
                   ? iswData.incidents.map((incident, index) => (
                       <li key={incident.id}>
                         <Typography variant="body1">
-                          <strong>Incident Title:</strong> {incident.incidentTitle}
+                          <strong style={{ marginRight: '15px' }} >Incident Title:</strong> {incident.incidentTitle}
                         </Typography>
                         <Typography variant="body1">
-                          <strong>Incident Type:</strong> {incident.incidentType}
+                          <strong  style={{ marginRight: '15px' }} >Incident Type:</strong> {incident.incidentType}
+                        </Typography>
+                        <Typography variant="body1">
+                          <strong  style={{ marginRight: '15px' }} >priority:</strong> {incident.priority}
+                        </Typography>
+                        <Typography variant="body1">
+                          <strong  style={{ marginRight: '15px' }} >CreatedAt:</strong> {incident.createdAt}
                         </Typography>
                         
                       </li>

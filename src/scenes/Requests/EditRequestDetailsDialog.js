@@ -74,24 +74,10 @@ const EditRequestDetailsDialog = ({ id, open, onClose , loadIncidents }) => {
     }
   };  
 
-  {/* const handleSave = async (values) => {
-    try {
-      // Exclude 'id' property if it's null
-      const requestData = values.id ? values : { iswName: values.iswName, incidents: values.incidents };
   
-      const response = await axios.put(`http://localhost:8082/api/isw/${id}`, requestData);
-      const updatedData = response.data;
-      setEditedData(updatedData);
-      onClose();
-    } catch (error) {
-      console.error('Error updating isw data:', error);
-    }
-  };  */}
-  
-
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit incident solving way information</DialogTitle>
+      <DialogTitle> EDIT  REQUEST </DialogTitle>
       <DialogContent>
         <Formik
           enableReinitialize

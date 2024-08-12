@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
-
   Typography,
   Box,
   IconButton,
   Snackbar,
   Container,
+  Button,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { AddToQueue, AddCard, ChangeCircle, DoDisturbOn } from '@mui/icons-material';
@@ -17,12 +19,9 @@ import ChangeStatusDialog from '../device/ChangeDeviceStatus';
 import { useTheme } from '@mui/material';
 import UnassignDialog from './IncidentUnassignmentDialog';
 import image from '../../data/image';
-
+import { PictureAsPdf } from '@mui/icons-material';
 
 const IncidentDetails = () => {
-
-
-
   const { id } = useParams(); // Extract the id parameter from the route
 
   const theme = useTheme();
@@ -46,19 +45,15 @@ const IncidentDetails = () => {
       }
     };
 
-    // Verify the Axios GET request payload
     axios
       .get(`http://localhost:8082/api/incident/${id}`, config)
       .then((response) => {
-        console.log('Response data:', response.data); // Log response data
-        // Extract the "data" field from the response
+        console.log('Response data:', response.data);
         const { data } = response.data;
         setIncidentData(data);
       })
       .catch((error) => {
         console.error('Error fetching incident details:', error);
-        // Log the entire error object for more information
-        console.error('Full error object:', error);
       });
   };
 
@@ -66,17 +61,32 @@ const IncidentDetails = () => {
     loadIncidentDetails();
   }, [id]);
 
+  // PDF Generation function
+  const generatePDF = () => {
+    const input = document.getElementById('incident-details');
+    if (input) {
+      html2canvas(input, { scale: 2 }).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`incident_${id}_details.pdf`);
+      });
+    } else {
+      console.error('Element with ID "incident-details" not found.');
+    }
+  };
+
   // Retrieve user role from local storage
   const userRole = localStorage.getItem('role');
 
-  // handling opening and closing of IncidentASsignment to admin  Dialog  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const openIncidentAssignmentDialog = (incidentId) => {
     setIsDialogOpen(true);
   };
-
-  // handling opening and closing of IncidentASsignment to admin  Dialog  
 
   const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
 
@@ -84,25 +94,17 @@ const IncidentDetails = () => {
     setIsUnassignDialogOpen(true);
   };
 
-
-  // handling opening and closing of solving way to incident Dialog  
-
   const [isIswToIncidentDialogOpen, setIsIswToIncidentDialogOpen] = useState(false);
 
   const openIncidentSolvingWayDialog = (incidentId) => {
     setIsIswToIncidentDialogOpen(true);
   };
 
-
-  // handling opening and closing of changing status of device Dialog  
-
   const [isStatusOfDeviceDialogOpen, setIsStatusOfDeviceDialogOpen] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
 
   const openStatusOfDeviceDialog = () => {
-
     if (incidentData && incidentData.devices.length > 0) {
-
       const deviceId = incidentData.devices[0].id;
       setIsStatusOfDeviceDialogOpen(true);
       setSelectedDeviceId(deviceId);
@@ -110,10 +112,6 @@ const IncidentDetails = () => {
       console.error('No devices found for the incident');
     }
   };
-
-
-
-  // handling  opening and closing of SnackBar 
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -124,136 +122,65 @@ const IncidentDetails = () => {
   };
 
   const showSnackbar = (responseCode, responseStatus) => {
-    // Determine snackbar color based on responseCode
     setSnackbarMessage(responseStatus);
     setSnackbarColor(responseCode);
     setSnackbarOpen(true);
   };
 
-
-
-
-
   return (
-
     <Container maxWidth="lg">
+      {/* Button to generate PDF */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<PictureAsPdf />}
+          onClick={generatePDF}
+          disabled={!incidentData}
+        >
+          Download PDF
+        </Button>
+      </Box>
 
-
-      <Box
-        elevation={3}
-      >
-
-
-
+      {/* Container for incident details */}
+      <Box id="incident-details" elevation={3} sx={{ padding: '5px', marginBottom: '5px', border: `1px solid ${borderColor}`, marginLeft: "5px", marginRight: "5px" }}>
         {incidentData && (
-          <Box
-            elevation={3}
-            sx={{
-              padding: '5px',
-              marginBottom: '5px',
-              border: `1px solid ${borderColor}`,
-              marginLeft: "5px",
-              marginRight: "5px",
-            }}
-
-          >
-
-            <Box
-              height="100px"
-              sx={{
-                padding: 0,
-                border: `1px solid ${borderColor}`,
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: '10px',
-              }}
-            >
+          <Box elevation={3} sx={{ padding: '5px', marginBottom: '5px', border: `1px solid ${borderColor}`, marginLeft: "5px", marginRight: "5px" }}>
+            <Box height="100px" sx={{ padding: 0, border: `1px solid ${borderColor}`, display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
               <Box sx={{ flex: 1, borderRight: `1px solid ${borderColor}`, p: 0, overflow: 'hidden' }}>
-                <img
-                  alt="gcla admin"
-                  width="100%"
-                  height="100px"
-                  src={image.george}
-                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                />
+                <img alt="gcla admin" width="100%" height="100px" src={image.george} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
               </Box>
               <Box sx={{ flex: 1, borderRight: `1px solid ${borderColor}`, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Typography variant="h5" align="center"> <h1>REPORTED INCIDENT DETAILS</h1></Typography>
+                <Typography variant="h5" align="center">
+                  <h1>REPORTED INCIDENT DETAILS</h1>
+                </Typography>
               </Box>
-              <Box
-                sx={{
-                  flex: 1,
-                  p: 2,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'start',
-                  justifyContent: 'start'
-                }}
-              >
+              <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start' }}>
                 <Typography variant="h6" align="center">ID: {incidentData.id} </Typography>
                 <Typography variant="h6" align="center">DATE: {incidentData.createdAt} </Typography>
               </Box>
-
-
             </Box>
 
-            <Box
-              elevation={3}
-              //height="200px"
-              sx={{
-                padding: '5px',
-                marginBottom: '8px',
-                border: `1px solid ${borderColor}`,
-                marginLeft: "3px",
-                marginRight: "3px",
-              }}
-
-            >
-
+            <Box elevation={3} sx={{ padding: '5px', marginBottom: '8px', border: `1px solid ${borderColor}`, marginLeft: "3px", marginRight: "3px" }}>
               <Box display="flex">
                 <Box flex="1" marginRight="16px">
-                  <strong style={{ marginLeft: '4px', marginRight: '15px' }}> INCIDENT:  </strong>
+                  <strong style={{ marginLeft: '4px', marginRight: '15px' }}> INCIDENT: </strong>
                   <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                    <strong style={{ marginRight: '10px' }}  >INCIDENT TITLE:</strong> {incidentData.incidentTitle}
+                    <strong style={{ marginRight: '10px' }}>INCIDENT TITLE:</strong> {incidentData.incidentTitle}
                   </Typography>
                   <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                    <strong style={{ marginRight: '10px' }} >INCIDENT TYPE :  </strong> {incidentData.incidentType}
+                    <strong style={{ marginRight: '10px' }}>INCIDENT TYPE: </strong> {incidentData.incidentType}
                   </Typography>
                   <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                    <strong style={{ marginRight: '10px' }} >PRIORITY :  </strong> {incidentData.priority}
+                    <strong style={{ marginRight: '10px' }}>PRIORITY: </strong> {incidentData.priority}
                   </Typography>
-                  {/* <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                  <strong style={{ marginRight: '10px' }} >CATEGORY :  </strong> {incidentData.category}
-                </Typography> */}
-
                   <Typography variant="body1" style={{ marginLeft: '8px' }}>
-                    <strong style={{ marginRight: '10px' }}> status: </strong>
-                    <Box
-                      bgcolor={
-                        ["FINE", "ACTIVE", "SOLVED", "PROVIDED", "APPROVED"].includes(incidentData.status)
-                          ? "#4CAF50"
-                          : ["Pending", "FAULT", "PENDING", "Solution_Pending", "In_Active"].includes(incidentData.status)
-                            ? "#f44336"
-                            : "#FFFFFF"
-                      }
-                      color="#FFFFFF"
-                      p={1}
-                      borderRadius={15}
-                      width={80}
-                      height={40}
-                      display="inline-flex"
-                      justifyContent="center"
-                      alignItems="center"
-                      style={{ marginLeft: 10 }}
-
-                      component="span"
-                    >
+                    <strong style={{ marginRight: '10px' }}>status: </strong>
+                    <Box bgcolor={["FINE", "ACTIVE", "SOLVED", "PROVIDED", "APPROVED"].includes(incidentData.status) ? "#4CAF50" : ["Pending", "FAULT", "PENDING", "Solution_Pending", "In_Active"].includes(incidentData.status) ? "#f44336" : "#FFFFFF"} color="#FFFFFF" p={1} borderRadius={15} width={80} height={40} display="inline-flex" justifyContent="center" alignItems="center" style={{ marginLeft: 10 }} component="span">
                       {incidentData.status}
                     </Box>
                   </Typography>
-
                 </Box>
-
 
                 <Box flex="1">
                   <strong style={{ marginLeft: '4px' }}>DEVICE:</strong>
@@ -299,8 +226,7 @@ const IncidentDetails = () => {
                     ))}
                   </ul>
                 </Box>
-
-                <Box flex="1" >
+                 <Box flex="1" >
                   <ul>
                     <strong style={{ marginLeft: '4px' }}>USER REPORTED INCIDENT: </strong>
                     {incidentData.users
@@ -328,40 +254,38 @@ const IncidentDetails = () => {
               </Box>
             </Box>
 
-
-
-            {incidentData && (
+           {incidentData && (
               <Box
-              elevation={3}
-              //height="200px"
-              sx={{
-                padding: '5px',
-                marginBottom: '8px',
-                border: `1px solid ${borderColor}`,
-                marginLeft: "3px",
-                marginRight: "3px",
-              }}
+                elevation={3}
+                //height="200px"
+                sx={{
+                  padding: '5px',
+                  marginBottom: '8px',
+                  border: `1px solid ${borderColor}`,
+                  marginLeft: "3px",
+                  marginRight: "3px",
+                }}
 
-            >
+              >
 
 
                 <Box display="flex" justifyContent="space-between">
                   <Box flex="1" marginRight="16px" justifyContent="column">
-                   { userRole === 'MANAGER' && (
-                    <>
-                    <Tooltip title="Assign Admin Incident">
-                      <IconButton color="success" onClick={() => openIncidentAssignmentDialog(incidentData.id)}>
-                        <AddToQueue style={{ color: "green", fontSize: 32 }} />
-                      </IconButton>
-                    </Tooltip>
+                    {userRole === 'MANAGER' && (
+                      <>
+                        <Tooltip title="Assign Admin Incident">
+                          <IconButton color="success" onClick={() => openIncidentAssignmentDialog(incidentData.id)}>
+                            <AddToQueue style={{ color: "green", fontSize: 32 }} />
+                          </IconButton>
+                        </Tooltip>
 
-                    <Tooltip title="Unassign admin from a incident">
-                      <IconButton color="success" onClick={() => openUserUnassignmentDialog(incidentData.id)}>
-                        <DoDisturbOn style={{ color: "red", fontSize: 32 }} />
-                      </IconButton>
-                    </Tooltip>
-                    </>
-                   )}
+                        <Tooltip title="Unassign admin from a incident">
+                          <IconButton color="success" onClick={() => openUserUnassignmentDialog(incidentData.id)}>
+                            <DoDisturbOn style={{ color: "red", fontSize: 32 }} />
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    )}
                     <ul>
                       <strong style={{ marginLeft: '4px' }}> INCIDENT ASSIGNED TO (IT): </strong>
                       {incidentData.users
@@ -458,57 +382,50 @@ const IncidentDetails = () => {
 
           </Box>
         )}
-
-
-
-
-
-        <MyFormDialog
-          open={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          loadIncidentDetails={loadIncidentDetails}
-          selectedIncidents={[id]}
-          showSnackbar={showSnackbar}
-        />
-
-        <IswToIncident
-          open={isIswToIncidentDialogOpen}
-          onClose={() => setIsIswToIncidentDialogOpen(false)}
-          loadIncidentDetails={loadIncidentDetails}
-          selectedIncidents={[id]}
-          showSnackbar={showSnackbar}
-        />
-
-        <UnassignDialog
-          open={isUnassignDialogOpen}
-          onClose={() => setIsUnassignDialogOpen(false)}
-          loadIncidentDetails={loadIncidentDetails}
-          selectedIncidents={[id]}
-          showSnackbar={showSnackbar}
-        />
-
-
-        <ChangeStatusDialog
-          open={isStatusOfDeviceDialogOpen}
-          onClose={() => setIsStatusOfDeviceDialogOpen(false)}
-          deviceId={selectedDeviceId}
-          showSnackbar={showSnackbar}
-          loadIncidentDetails={loadIncidentDetails}
-          incidentData={incidentData}
-        />
-
-
-
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={4000}
-          onClose={handleCloseSnackbar}
-          message={snackbarMessage}
-          sx={{ backgroundColor: snackbarColor }}
-        />
-
       </Box>
 
+      <MyFormDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        incidentId={id}
+        userRole={userRole}
+        showSnackbar={showSnackbar}
+      />
+
+      <IswToIncident
+        isOpen={isIswToIncidentDialogOpen}
+        onClose={() => setIsIswToIncidentDialogOpen(false)}
+        incidentId={id}
+        showSnackbar={showSnackbar}
+      />
+
+      <ChangeStatusDialog
+        isOpen={isStatusOfDeviceDialogOpen}
+        onClose={() => setIsStatusOfDeviceDialogOpen(false)}
+        incidentId={id}
+        deviceId={selectedDeviceId}
+        showSnackbar={showSnackbar}
+      />
+
+      <UnassignDialog
+        isOpen={isUnassignDialogOpen}
+        onClose={() => setIsUnassignDialogOpen(false)}
+        deviceId={selectedDeviceId}
+        showSnackbar={showSnackbar}
+      />
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        ContentProps={{
+          style: {
+            backgroundColor: snackbarColor === 'success' ? '#4CAF50' : snackbarColor === 'error' ? '#f44336' : '#2196F3',
+          },
+        }}
+      />
     </Container>
   );
 };

@@ -117,8 +117,8 @@ const DeviceDetails = () => {
                 justifyContent: 'start'
               }}
             >
-              <Typography variant="h6" align="center">ID: </Typography>
-              <Typography variant="h6" align="center">DATE:  </Typography>
+              <Typography variant="h6" align="center">ID: {deviceData.id} </Typography>
+              <Typography variant="h6" align="center">DATE:  {deviceData.createdAt} </Typography>
             </Box>
 
 

@@ -89,7 +89,7 @@ function MyFormDialog({ open, onClose, loadDevices, showSnackbar }) {
   
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Create New Device</DialogTitle>
+      <DialogTitle> ADD NEW DEVICE </DialogTitle>
       <DialogContent>
         <Formik
           initialValues={initialValues}

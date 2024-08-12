@@ -84,9 +84,9 @@ const DeviceEditDialog = ({ deviceId, open, onClose, loadDevices }) => {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit Device</DialogTitle>
+      <DialogTitle> EDIT   DEVICE </DialogTitle>
       <DialogContent>
-        <DialogContentText>Please edit the device details</DialogContentText>
+        
         <Formik
           enableReinitialize
           initialValues={{

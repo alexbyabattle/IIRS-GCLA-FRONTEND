@@ -19,7 +19,9 @@ import axios from 'axios';
 
 const checkoutSchema = yup.object().shape({
   iswName: yup.string().required('Required incident solving way'),
-  selectedIncidents: yup.array(),
+  incidentCausedBy : yup.string().required('required incident caused by'),
+  incidentStatus : yup.string().required('required  incident status'),
+  deviceToReplace : yup.string().required('required  device  to  replace'),
   dateTime: yup.date().required('Date and time is required'),
 });
 
@@ -30,21 +32,11 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
   const [editedData, setEditedData] = useState({});
 
   useEffect(() => {
-    fetchIncidents();
+    
     fetchIswData(id);
   }, [id]);
 
-  const fetchIncidents = () => {
-    axios
-      .get('http://localhost:8082/api/incident')
-      .then((response) => {
-        setIncidents(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching incidents:', error);
-        console.error('error response data', error.response?.data )
-      });
-  };
+  
 
   const fetchIswData = async (id) => {
     try {
@@ -60,7 +52,7 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
 
   const handleSave = async (values) => {
     try {
-      const response = await axios.put(`http://localhost:8082/api/isw/${id}`, values);
+      const response = await axios.put(`http://localhost:8082/api/isw/editing/${id}`, values);
       const updatedData = response.data;
       setEditedData(updatedData);
       loadIsws();
@@ -88,13 +80,15 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit incident solving way information</DialogTitle>
+      <DialogTitle>EDIT INCIDENT SOLVING WAYS</DialogTitle>
       <DialogContent>
         <Formik
           enableReinitialize
           initialValues={{
             iswName: editedData.iswName || '',
-            selectedIncidents: selectedIncidents || [],
+            incidentCausedBy: editedData.incidentCausedBy ||  '',
+            deviceToReplace : editedData.deviceToReplace ||  '' , 
+            incidentStatus : editedData.incidentStatus || '' ,
             dateTime: dayjs(),
           }}
           onSubmit={(values) => handleSave(values)}
@@ -119,41 +113,48 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
                 </Grid>
                 <Grid item xs={6}>
                   <TextField
-                    select
                     fullWidth
                     variant="filled"
-                    label="Incidents of ISW"
-                    onBlur={() => {
-                      setSelectTouched(true);
-                    }}
-                    onChange={(e) => {
-                      const selectedIds = e.target.value;
-                      setSelectedIncidents(selectedIds);
-                      setSelectTouched(false);
-                      setFieldValue('selectedIncidents', selectedIds);
-                    }}
-                    value={values.selectedIncidents}
-                    name="selectedIncidents"
-                    helperText={selectTouched && values.selectedIncidents.length === 0 && 'At least one incident must be selected'}
-                    SelectProps={{
-                      multiple: true,
-                      renderValue: (selected) => {
-                        return selected
-                          .map((selectedIncident) => {
-                            const incident = incidents.find((incident) => incident.id === selectedIncident);
-                            return incident ? incident.incidentTitle : '';
-                          })
-                          .join(',');
-                      },
-                    }}
-                  >
-                    {incidents.map((incident) => (
-                      <MenuItem key={incident.id} value={incident.id}>
-                        {incident.incidentTitle}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    type="text"
+                    label="incidentCausedBy"
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                    value={values.incidentCausedBy}
+                    name="incidentCausedBy"
+                    error={touched.incidentCausedBy && !!errors.incidentCausedBy}
+                    helperText={touched.incidentCausedBy && errors.incidentCausedBy}
+                  />
                 </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    variant="filled"
+                    type="text"
+                    label="deviceToReplace"
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                    value={values.deviceToReplace}
+                    name="deviceToReplace"
+                    error={touched.deviceToReplace && !!errors.deviceToReplace}
+                    helperText={touched.deviceToReplace && errors.deviceToReplace}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    variant="filled"
+                    type="text"
+                    label="incident Status"
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                    value={values.incidentStatus}
+                    name="incidentStatus"
+                    error={touched.incidentStatus && !!errors.incidentStatus}
+                    helperText={touched.incidentStatus && errors.incidentStatus}
+                  />
+                </Grid>
+
+                
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <Grid item xs={6}>
                     <div style={{ marginTop: '10px' }} />

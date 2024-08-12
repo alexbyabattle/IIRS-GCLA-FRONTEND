@@ -99,6 +99,10 @@ const Login = () => {
       justifyContent="center"
       boxShadow={3}
     >
+       <Typography component="h5" variant="h5" mb={1} color="white">
+          GOVERNMENT CHEMITRY  LABORATORY  AUTHORITY
+       </Typography>
+      
       <Avatar sx={{ m: 2, bgcolor: 'secondary.main', width: 100, height: 100 }}>
         <img
           alt="gcla admin"

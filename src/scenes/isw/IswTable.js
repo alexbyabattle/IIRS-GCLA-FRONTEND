@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, IconButton, Snackbar } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid , GridToolbar } from '@mui/x-data-grid';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { Delete } from '@mui/icons-material';
@@ -9,8 +9,15 @@ import axios from 'axios';
 import DeleteDialog from './DeleteIswDialog';
 import IswDetailsDialog from './IswDetailsDialog';
 import IswEditDialog from './IswEditDialog';
+import { useTheme } from "@mui/material";
+import { tokens } from "../../theme";
+
 
 const IswTable = () => {
+
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+
   const [rows, setRows] = useState([]);
 
   const loadIsws = async () => {
@@ -223,9 +230,29 @@ const IswTable = () => {
         onClose={closeIswEditDialog}
         loadIsws={loadIsws}
       />
-      <Box m="40px 0 0 0" height="72vh">
-        <DataGrid rows={rows} columns={columns} />
-      </Box>
+      <Box
+          m="0"
+          height="72vh"
+          sx={{
+            "& .MuiDataGrid-root": {
+              color: theme.palette.mode === 'light' ? '#000000' : undefined, // Set text color to black in light mode
+              border: theme.palette.mode === 'light' ? '1px solid #000000' : undefined, // Set border color to black in light mode
+            },
+            "& .MuiDataGrid-row": {
+              borderBottom: theme.palette.mode === 'light' ? '1px solid #000000' : undefined, // Set border between each row to black in light mode
+            },
+            "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
+              color: `${colors.grey[100]} !important`,
+            },
+          }}
+        >
+          <DataGrid
+            disableRowSelectionOnClick
+            rows={rows}
+            columns={columns}
+            components={{ Toolbar: GridToolbar }}
+          />
+        </Box>
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
