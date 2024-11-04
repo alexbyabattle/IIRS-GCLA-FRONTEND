@@ -12,6 +12,8 @@ import EditRequestDetailsDialog from './EditRequestDetailsDialog';
 import { Formik } from 'formik';
 import RequestDetailsDialog from './RequestDetailsDialog';
 import DeleteDialog from '../incident/DeleteIncidentDialog';
+import { jwtDecode } from 'jwt-decode';
+import UserDetails from '../User/UserDetails';
 
 
 
@@ -36,7 +38,7 @@ const Request = () => {
   const loadIncidents = async () => {
     try {
       
-      const userId = localStorage.getItem('userId');
+      const userId = UserDetails?.id;
       const accessToken = localStorage.getItem('accessToken');
 
       if (!accessToken || !userId) {

@@ -38,8 +38,7 @@ function ChangeIncidentStatusDialog({ open, onClose, incidentId, showSnackbar, l
         axios
             .put(updateStatusEndpoint, payload)
             .then((response) => {
-                // Handle the success response (e.g., update UI)
-                console.log('Device status updated successfully');
+                
 
                 // Determine snackbar color and message based on the response code
                 const responseCode = response.data.header.responseCode;

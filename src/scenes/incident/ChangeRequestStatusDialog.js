@@ -8,6 +8,7 @@ import {
     Typography,
     Box,
 } from '@mui/material';
+import { jwtDecode } from 'jwt-decode'; 
 
 const dialogContentStyle = {
     display: 'flex',
@@ -17,15 +18,35 @@ const dialogContentStyle = {
     minHeight: '80px',
 };
 
+
 function ChangeRequestStatusDialog({ open, onClose, incidentId, showSnackbar, loadIncidentDetails, incidentData, loadIncidents }) {
+
+    const getUserDetailsFromToken = () => {
+
+        const accessToken = localStorage.getItem('accessToken');
+        if (accessToken) {
+          try {
+            const decodedToken = jwtDecode(accessToken);
+            console.log('Decoded Token:', decodedToken);
+            const { id, role, department } = decodedToken;
+            return { id, role, department };
+          } catch (error) {
+            console.error('Error decoding token:', error);
+          }
+        }
+        return null;
+      };
+    
+      const userDetails = getUserDetailsFromToken();
+      
 
     const updateIncidentStatus = () => {
 
-        const userId = localStorage.getItem('userId');
+        const userId = userDetails?.id;
         const accessToken = localStorage.getItem('accessToken');
 
-        if (!accessToken || !userId) {
-            console.error('Access token or user ID not found in local storage');
+        if (!accessToken ) {
+            console.error('Access token is not found');
             return;
         }
 

@@ -18,6 +18,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import image from '../../data/image';
 import { useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 const initialValues = {
   incidentTitle: '',
@@ -45,9 +46,26 @@ const Request = () => {
 
   const navigate = useNavigate();
 
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
+
+  const userDetails = getUserDetailsFromToken();
+
   const handleFormSubmit = async (values) => {
     try {
-      const userId = localStorage.getItem('userId');
+      const userId = userDetails?.id;
       const accessToken = localStorage.getItem('accessToken');
 
       if (!accessToken || !userId) {

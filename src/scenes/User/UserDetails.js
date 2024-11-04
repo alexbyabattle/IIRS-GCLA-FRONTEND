@@ -12,9 +12,10 @@ import { useParams } from 'react-router-dom';
 import { useTheme } from '@mui/material';
 import { EditNote } from '@mui/icons-material';
 import UserEditForUser from './UserEditForUser';
+import { jwtDecode } from 'jwt-decode'; 
 
 const UserDetails = () => {
-  const { id } = useParams();
+  
   const theme = useTheme();
   const borderColor = theme.palette.mode === 'dark' ? 'white' : 'black';
 
@@ -24,6 +25,25 @@ const UserDetails = () => {
   const [snackbarColor, setSnackbarColor] = useState('success');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
+
+  const userDetails = getUserDetailsFromToken();
+  const id = userDetails?.id;
+
 
   const loadUserDetails = async () => {
     const accessToken = localStorage.getItem('accessToken');
@@ -41,11 +61,10 @@ const UserDetails = () => {
 
       console.log('Response data:', response.data);
       const { data } = response.data;
-      console.log('User data:', data);
+      
       setUserData(data);
     } catch (error) {
       console.error('Error fetching user details:', error);
-      console.error('Full error object:', error);
       showSnackbar('error', 'Error fetching user details');
     }
   };

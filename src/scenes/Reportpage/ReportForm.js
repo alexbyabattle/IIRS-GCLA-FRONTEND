@@ -1,389 +1,378 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Button,
-  TextField,
+  Card,
   Grid,
   Box,
   Typography,
   Container,
-  MenuItem,
+  Button,
+
 } from '@mui/material';
-import { useFormik } from 'formik';
-import * as yup from 'yup';
-import dayjs from 'dayjs';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useTheme } from '@mui/material';
 import image from '../../data/image';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import { useParams } from 'react-router-dom';
+import { PictureAsPdf } from '@mui/icons-material';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
-const initialValues = {
-  organisation: 'GELA',
-  branch: 'DSM',
-  dateOccurred: dayjs(),
-  ref: '',
-  problemNature: 'Hardware',
-  module: 'PRINTER',
-  description: '',
-  systemError: '',
-  reportedBy: '',
-  designation: '',
-  signature: '',
-  dateReported: dayjs(),
-  authorisedBy: '',
-  priority: '1',
-  taskAllocatedTo: 'VENDOR',
-  taskCompletionVerifiedBy: '',
-  dateOfCompletion: dayjs(),
-  problemSolution: ''
-};
-
-const validationSchema = yup.object().shape({
-  organisation: yup.string().required('Required'),
-  branch: yup.string().required('Required'),
-  dateOccurred: yup.date().required('Required'),
-  ref: yup.string().required('Required'),
-  problemNature: yup.string().required('Required'),
-  module: yup.string().required('Required'),
-  description: yup.string().required('Required'),
-  systemError: yup.string().required('Required'),
-  reportedBy: yup.string().required('Required'),
-  designation: yup.string().required('Required'),
-  signature: yup.string().required('Required'),
-  dateReported: yup.date().required('Required'),
-  authorisedBy: yup.string().required('Required'),
-  priority: yup.string().required('Required'),
-  taskAllocatedTo: yup.string().required('Required'),
-  taskCompletionVerifiedBy: yup.string().required('Required'),
-  dateOfCompletion: yup.date().required('Required'),
-  problemSolution: yup.string().required('Required')
-});
 
 const ReportForm = () => {
+
+  const { id } = useParams(); // Extract the id parameter from the route
+
   const theme = useTheme();
   const borderColor = theme.palette.mode === 'dark' ? 'white' : 'black';
 
+  const [incidentData, setIncidentData] = useState(null);
+
+
+  const loadIncidentDetails = () => {
+
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (!accessToken) {
+      console.error('Access token not found in local storage');
+      return;
+    }
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    };
+
+
+    // Log the deviceId before making the request
+    //console.log('Incident ID  to  be  filled:', id);
+
+    axios
+      .get(`http://localhost:8082/api/incident/${id}`, config)
+      .then((response) => {
+
+        const { data } = response.data;
+        setIncidentData(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching incident details:', error);
+      });
+  };
+
+  useEffect(() => {
+    loadIncidentDetails();
+  }, [id]);
+
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
+
+  const userDetails = getUserDetailsFromToken();
   const navigate = useNavigate();
 
-  const formik = useFormik({
-    initialValues: initialValues,
-    validationSchema: validationSchema,
-    onSubmit: async (values) => {
-      try {
-        const userId = localStorage.getItem('userId');
-        const accessToken = localStorage.getItem('accessToken');
-
-        if (!accessToken || !userId) {
-          console.error('Access token or user ID not found in local storage');
-          return;
-        }
-
-        const postData = {
-          ...values,
-          dateOccurred: values.dateOccurred.toISOString(),
-          dateReported: values.dateReported.toISOString(),
-          dateOfCompletion: values.dateOfCompletion.toISOString(),
-        };
-
-        const config = {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        };
-
-        const response = await axios.post(
-          'http://localhost:8082/api/incident/create',
-          postData,
-          config
-        );
-
-        formik.resetForm();
-        navigate('/incidents');
-      } catch (error) {
-        console.error(error);
-      }
-    },
-  });
+  // PDF Generation function
+  const generatePDF = () => {
+    const input = document.getElementById('incident-details');
+    if (input) {
+      html2canvas(input, { scale: 2 }).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`incident_${id}_details.pdf`);
+      });
+    } else {
+      console.error('Element with ID "incident-details" not found.');
+    }
+  };
 
   return (
-    <Container maxWidth="md">
-      <Box
-        component="form"
-        onSubmit={formik.handleSubmit}
-        sx={{ mt: 3, border: `1px solid ${borderColor}`, p: 3 }}
-      >
-        <Box
-          height="100px"
-          sx={{
-            padding: 0,
-            border: `1px solid ${borderColor}`,
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '20px',
-          }}
+    <Box>
+      <Box style={{  marginTop: '0px', marginLeft: '300px' }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<PictureAsPdf />}
+          onClick={generatePDF}
+          disabled={!incidentData}
         >
-          <Box sx={{ flex: 1, borderRight: `1px solid ${borderColor}`, p: 0, overflow: 'hidden' }}>
-            <img
-              alt="gcla admin"
-              width="100%"
-              height="100px"
-              src={image.george}
-              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-            />
-          </Box>
-          <Box sx={{ flex: 1, borderRight: `1px solid ${borderColor}`, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="h5" align="center">INCIDENT REPORTING FORM</Typography>
-          </Box>
+          Download PDF
+        </Button>
+      </Box>
+      <Container
+        id="incident-details" 
+        maxWidth="lg"  // Set to a larger maxWidth or use "xl" for extra large
+        sx={{
+          backgroundColor: 'white',
+          padding: '10px',
+          width: '55%', // Ensure it occupies full width
+          
+          height: '1000px', // Reduced height
+          color: 'black', // Set text color to black
+          '& .MuiTextField-root, & .MuiTypography-root': {
+            color: 'black', // Ensures text fields and typography are black
+          },
+        }}
+      >
+
+        {incidentData && (
           <Box
             sx={{
-              flex: 1,
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column', 
-              alignItems: 'start',   
-              justifyContent: 'start' 
+              mt: 1,
+              p: 1,
+              width: '100%',
+              height: '100%',
+              boxSizing: 'border-box',
             }}
           >
-            <Typography variant="h6" align="center">ID: </Typography>
-            <Typography variant="h6" align="center">DATE: </Typography>
-          </Box>
-
-
-        </Box>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="organisation"
-              label="Organisation"
-              fullWidth
-              value={formik.values.organisation}
-              onChange={formik.handleChange}
-              error={formik.touched.organisation && Boolean(formik.errors.organisation)}
-              helperText={formik.touched.organisation && formik.errors.organisation}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="branch"
-              label="Branch"
-              fullWidth
-              value={formik.values.branch}
-              onChange={formik.handleChange}
-              error={formik.touched.branch && Boolean(formik.errors.branch)}
-              helperText={formik.touched.branch && formik.errors.branch}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Date and Time Incident Occurred"
-                value={formik.values.dateOccurred}
-                onChange={(date) => formik.setFieldValue('dateOccurred', date)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    error={formik.touched.dateOccurred && Boolean(formik.errors.dateOccurred)}
-                    helperText={formik.touched.dateOccurred && formik.errors.dateOccurred}
-                  />
-                )}
-              />
-            </LocalizationProvider>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="ref"
-              label="REF"
-              fullWidth
-              value={formik.values.ref}
-              onChange={formik.handleChange}
-              error={formik.touched.ref && Boolean(formik.errors.ref)}
-              helperText={formik.touched.ref && formik.errors.ref}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              select
-              name="problemNature"
-              label="Nature of the Problem"
-              fullWidth
-              value={formik.values.problemNature}
-              onChange={formik.handleChange}
-              error={formik.touched.problemNature && Boolean(formik.errors.problemNature)}
-              helperText={formik.touched.problemNature && formik.errors.problemNature}
+            {/* Header */}
+            <Box
+              height="80px" // Reduced height
+              sx={{
+                padding: 0,
+                border: '1px solid black', // Set border color to black
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginBottom: '10px', // Reduced margin
+              }}
             >
-              <MenuItem value="Software">Software</MenuItem>
-              <MenuItem value="OS">OS</MenuItem>
-              <MenuItem value="Hardware">Hardware</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="module"
-              label="Module/Program Name"
-              fullWidth
-              value={formik.values.module}
-              onChange={formik.handleChange}
-              error={formik.touched.module && Boolean(formik.errors.module)}
-              helperText={formik.touched.module && formik.errors.module}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="description"
-              label="Description of Incident"
-              fullWidth
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={formik.touched.description && formik.errors.description}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="systemError"
-              label="System Error Messages and Codes Reported"
-              fullWidth
-              value={formik.values.systemError}
-              onChange={formik.handleChange}
-              error={formik.touched.systemError && Boolean(formik.errors.systemError)}
-              helperText={formik.touched.systemError && formik.errors.systemError}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="reportedBy"
-              label="Reported By"
-              fullWidth
-              value={formik.values.reportedBy}
-              onChange={formik.handleChange}
-              error={formik.touched.reportedBy && Boolean(formik.errors.reportedBy)}
-              helperText={formik.touched.reportedBy && formik.errors.reportedBy}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="designation"
-              label="Designation"
-              fullWidth
-              value={formik.values.designation}
-              onChange={formik.handleChange}
-              error={formik.touched.designation && Boolean(formik.errors.designation)}
-              helperText={formik.touched.designation && formik.errors.designation}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              name="signature"
-              label="Signature"
-              fullWidth
-              value={formik.values.signature}
-              onChange={formik.handleChange}
-              error={formik.touched.signature && Boolean(formik.errors.signature)}
-              helperText={formik.touched.signature && formik.errors.signature}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Date Reported"
-                value={formik.values.dateReported}
-                onChange={(date) => formik.setFieldValue('dateReported', date)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    error={formik.touched.dateReported && Boolean(formik.errors.dateReported)}
-                    helperText={formik.touched.dateReported && formik.errors.dateReported}
-                  />
-                )}
-              />
-            </LocalizationProvider>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="authorisedBy"
-              label="Authorised By"
-              fullWidth
-              value={formik.values.authorisedBy}
-              onChange={formik.handleChange}
-              error={formik.touched.authorisedBy && Boolean(formik.errors.authorisedBy)}
-              helperText={formik.touched.authorisedBy && formik.errors.authorisedBy}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="priority"
-              label="Priority"
-              fullWidth
-              value={formik.values.priority}
-              onChange={formik.handleChange}
-              error={formik.touched.priority && Boolean(formik.errors.priority)}
-              helperText={formik.touched.priority && formik.errors.priority}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="taskAllocatedTo"
-              label="Task Allocated To"
-              fullWidth
-              value={formik.values.taskAllocatedTo}
-              onChange={formik.handleChange}
-              error={formik.touched.taskAllocatedTo && Boolean(formik.errors.taskAllocatedTo)}
-              helperText={formik.touched.taskAllocatedTo && formik.errors.taskAllocatedTo}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="taskCompletionVerifiedBy"
-              label="Task Completion Verified By"
-              fullWidth
-              value={formik.values.taskCompletionVerifiedBy}
-              onChange={formik.handleChange}
-              error={formik.touched.taskCompletionVerifiedBy && Boolean(formik.errors.taskCompletionVerifiedBy)}
-              helperText={formik.touched.taskCompletionVerifiedBy && formik.errors.taskCompletionVerifiedBy}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Date of Task Completion"
-                value={formik.values.dateOfCompletion}
-                onChange={(date) => formik.setFieldValue('dateOfCompletion', date)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    fullWidth
-                    error={formik.touched.dateOfCompletion && Boolean(formik.errors.dateOfCompletion)}
-                    helperText={formik.touched.dateOfCompletion && formik.errors.dateOfCompletion}
-                  />
-                )}
-              />
-            </LocalizationProvider>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              name="problemSolution"
-              label="Description of How the Problem was Solved"
-              fullWidth
-              value={formik.values.problemSolution}
-              onChange={formik.handleChange}
-              error={formik.touched.problemSolution && Boolean(formik.errors.problemSolution)}
-              helperText={formik.touched.problemSolution && formik.errors.problemSolution}
-            />
-          </Grid>
-        </Grid>
+              <Box sx={{ flex: 1, borderRight: '1px solid black', p: 0, overflow: 'hidden' }}> {/* Set borderRight color to black */}
+                <img
+                  alt="gcla admin"
+                  width="100%"
+                  height="80px" // Reduced height
+                  src={image.george}
+                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                />
+              </Box>
+              <Box sx={{ flex: 1, borderRight: '1px solid black', p: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}> {/* Set borderRight color to black */}
+                <Typography variant="h6" align="center" sx={{ fontSize: '1rem' }}>INCIDENT REPORTING FORM</Typography> {/* Reduced font size */}
+              </Box>
+              <Box
+                sx={{
+                  flex: 1,
+                  p: 1, // Reduced padding
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'start',
+                  justifyContent: 'start'
+                }}
+              >
+                <Typography variant="h6" align="center" sx={{ fontSize: '0.9rem' }}>INCIDENT ID: {incidentData.id} </Typography> {/* Reduced font size */}
+                <Typography variant="h6" align="center" sx={{ fontSize: '0.9rem' }}>DATE: {incidentData.createdAt} </Typography> {/* Reduced font size */}
+              </Box>
+            </Box>
 
-        <Box mt={3}>
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Submit
-          </Button>
-        </Box>
-      </Box>
-    </Container>
+
+            <Grid container spacing={1}> {/* Reduced spacing */}
+              {/* Use a reduced size for text fields */}
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> ORGANIZATION </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}> GOVERNMENT CHEMITRY LABORATORY AUTHORITY (GCLA) </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> BRANCH </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}> DAR-ES-SALAAM </span>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography style={{ color: 'black' }}>
+                  <strong> INCIDENT DETAILS </strong>
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> DATE AND TIME </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>{incidentData.createdAt}</span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> INCIDENT TYPE  </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>{incidentData.incidentType}</span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> DEVICE </label>
+                  <span style={{ display: 'block', marginTop: '2px', marginLeft: '2px' }}>
+                    {incidentData?.devices?.[0]?.deviceName || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> MANUFACTURAL </label>
+                  <span style={{ display: 'block', marginTop: '2px', marginLeft: '2px' }}>
+                    {incidentData?.devices?.[0]?.manufactural || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> INCIDENT PRIORITY  </label>
+                  <span style={{ display: 'block', marginTop: '2px', marginLeft: '2px' }}>{incidentData.priority}</span>
+                </Card>
+              </Grid>
+              <Grid item xs={12}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> INCIDENT DESCRIPTION </label>
+                  <span style={{ display: 'block', marginTop: '2px', marginLeft: '2px' }}>{incidentData.incidentTitle}</span>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography style={{ color: 'black' }}>
+                  <strong> USER REPORTED INCIDENT DETAILS </strong>
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> REPORTED BY </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[0]?.name || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> DEPARTMENT </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[0]?.department || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> LOCATION </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[0]?.location || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> PHONE NUMBER </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[0]?.phoneNumber || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography style={{ color: 'black' }}>
+                  <strong> ICT OFFICE INCIDENT RESOLUTION </strong>
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label>TASK ASSIGNED TO </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[1]?.name || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> PHONE-NUMBER </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[1]?.phoneNumber || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '40px' }}>
+                  <label> DEPARTMENT </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[1]?.department || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> ASSIGNED AT </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.users?.[1]?.createdAt || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label>  INCIDENT SOLVING WAY  </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.solvingWays?.[0]?.iswName || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label>  INCIDENT CAUSED BY </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.solvingWays?.[0]?.incidentCausedBy || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> DEVICE REPLACED </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.solvingWays?.[0]?.deviceToReplace || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> RESOLUTION DATE </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.solvingWays?.[0]?.createdAt || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> ALLOCATED TO </label>
+
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                  <label> INCIDENT STATUS </label>
+                  <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
+                    {incidentData?.solvingWays?.[0]?.incidentStatus || 'N/A'}
+                  </span>
+                </Card>
+              </Grid>
+
+
+
+            </Grid>
+          </Box>
+        )}
+      </Container>
+    </Box>
   );
 };
 

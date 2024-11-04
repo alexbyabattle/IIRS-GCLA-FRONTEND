@@ -40,7 +40,7 @@ const DeviceTable = () => {
         return;
       }
 
-      
+
 
       const response = await axios.get(`http://localhost:8082/api/v1/device/list`, {
         headers: {
@@ -55,7 +55,7 @@ const DeviceTable = () => {
         deviceNumber: item.deviceNumber,
         manufactural: item.manufactural,
         status: item.status,
-        
+
 
       }));
 
@@ -101,7 +101,7 @@ const DeviceTable = () => {
 
   const handleDeleteClick = (deviceId) => {
     setSelectedDeviceId(deviceId);
-    
+
     setDeleteDialogOpen(true);
   };
 
@@ -112,28 +112,23 @@ const DeviceTable = () => {
   };
 
 
-   // handling  displaying of details
+  // handling  displaying of details
+  const navigate = useNavigate();
 
-
-   const [selectedDeviceIdForDetails, setSelectedDeviceIdForDetails] = useState(null);
-   const navigate = useNavigate();
- 
- 
- 
-   const openDeviceDetailsPage = (deviceId) => {
-     if (deviceId) {
-       setSelectedDeviceIdForDetails(deviceId);
-       navigate(`/deviceDetails/${deviceId}`);
-     }
-   };
+  const openDeviceDetailsPage = (deviceId) => {
+    if (deviceId) {
+      navigate(`/deviceDetails/${deviceId}`);
+    }
+  };
 
   // handling edit dialog 
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDeviceIdForEdit, setSelectedDeviceIdForEdit] = useState(null);
 
-  
+
   const handleEditClick = (deviceId) => {
+
     setSelectedDeviceIdForEdit(deviceId);
     setIsEditDialogOpen(true);
   };
@@ -141,7 +136,7 @@ const DeviceTable = () => {
   const closeDeviceEditDialog = () => {
     setIsEditDialogOpen(false);
     setSelectedDeviceIdForEdit(null);
-  };   
+  };
 
 
   const columns = [
@@ -198,7 +193,7 @@ const DeviceTable = () => {
       },
     },
 
-   
+
 
     {
       field: "actions",
@@ -209,9 +204,9 @@ const DeviceTable = () => {
         return (
           <Box display="flex" justifyContent="center">
             <IconButton color="secondary" onClick={() => handleDeleteClick(row.id)}>
-              <Delete style={{ color: "red" }} /> 
+              <Delete style={{ color: "red" }} />
             </IconButton>
-            <IconButton color="info" onClick={() =>handleEditClick (row.id)} >
+            <IconButton color="info" onClick={() => handleEditClick(row.id)} >
               <EditOutlinedIcon />
             </IconButton>
             <IconButton color="success" onClick={() => openDeviceDetailsPage(row.id)} >
@@ -226,7 +221,7 @@ const DeviceTable = () => {
 
   return (
     <Box >
-    
+
 
       <Snackbar
         open={snackbarOpen}
@@ -251,10 +246,7 @@ const DeviceTable = () => {
         showSnackbar={showSnackbar}
       />
 
-      <DeviceDetails
-        id={selectedDeviceIdForDetails}
-      />
-
+      
       <DeleteDialog
         open={deleteDialogOpen}
         onClose={handleDeleteDialogClose}
@@ -270,18 +262,18 @@ const DeviceTable = () => {
           marginRight: '20px'
         }}
       >
-         <Header title="DEVICES " />
+        <Header title="DEVICES " />
 
-      <Box display="flex" justifyContent="start" mt="0px" sx={{ marginBottom: "5px" }}>
-        <Button
-          onClick={openDeviceDialog}
-          color="secondary"
-          variant="contained"
-          sx={{ width: "120px", height: "25px" }}
-        >
-          ADD DEVICE
-        </Button>
-      </Box>
+        <Box display="flex" justifyContent="start" mt="0px" sx={{ marginBottom: "5px" }}>
+          <Button
+            onClick={openDeviceDialog}
+            color="secondary"
+            variant="contained"
+            sx={{ width: "120px", height: "25px" }}
+          >
+            ADD DEVICE
+          </Button>
+        </Box>
 
         <Box
           m="0"
@@ -304,6 +296,7 @@ const DeviceTable = () => {
             rows={rows}
             columns={columns}
             components={{ Toolbar: GridToolbar }}
+            
           />
         </Box>
 

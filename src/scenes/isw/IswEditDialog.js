@@ -31,14 +31,9 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
   const [selectedIncidents, setSelectedIncidents] = useState([]);
   const [editedData, setEditedData] = useState({});
 
-  useEffect(() => {
-    
-    fetchIswData(id);
-  }, [id]);
-
-  
 
   const fetchIswData = async (id) => {
+    
     try {
       const response = await axios.get(`http://localhost:8082/api/isw/getIswWithIncidents/${id}`);
       const iswData = response.data.data;
@@ -50,6 +45,16 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
     }
   };
 
+
+  useEffect(() => {
+    if (id) {
+    fetchIswData(id);
+    }
+  }, [id]);
+
+  
+
+  
   const handleSave = async (values) => {
     try {
       const response = await axios.put(`http://localhost:8082/api/isw/editing/${id}`, values);

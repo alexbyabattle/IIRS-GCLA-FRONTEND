@@ -13,6 +13,7 @@ import IncidentDetailsDialog from './IncidentDetailsDialog';
 import EditRequestDetailsDialog from './EditRequestDetailsDialog';
 import ChangeIncidentStatusDialog from '../incident/ChangeIncidentStatusDialog';
 import EditIncidentDetailsDialog from './EditIncidentDetailsDialog';
+import { jwtDecode } from 'jwt-decode';
 
 
 const Incidents = () => {
@@ -23,10 +24,27 @@ const Incidents = () => {
   // handling  populating the data after submitting
   const [rows, setRows] = useState([]);
 
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
+
+  const userDetails = getUserDetailsFromToken();
+
   const loadIncidents = async () => {
     try {
 
-      const userId = localStorage.getItem('userId');
+      const userId = userDetails?.id;
       const accessToken = localStorage.getItem('accessToken');
 
       if (!accessToken || !userId) {

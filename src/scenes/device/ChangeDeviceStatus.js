@@ -18,14 +18,14 @@ const dialogContentStyle = {
     minHeight: '80px',
 };
 
-function ChangeStatusDialog({ open, onClose, deviceId, showSnackbar, loadIncidentDetails ,  incidentData  }) {
+function ChangeStatusDialog({ open, onClose, deviceId, showSnackbar, loadIncidentDetails, incidentData }) {
 
     const updateDeviceStatus = () => {
 
-        
+
         const accessToken = localStorage.getItem('accessToken');
 
-        if (!accessToken ) {
+        if (!accessToken) {
             console.error('Access token  not found in local storage');
             return;
         }
@@ -36,7 +36,19 @@ function ChangeStatusDialog({ open, onClose, deviceId, showSnackbar, loadInciden
             },
         };
 
+        
         const updateStatusEndpoint = `http://localhost:8082/api/v1/device/status/${deviceId}`;
+
+        // Log the deviceId before making the request
+        console.log('Device ID before updating status:', deviceId);
+
+        console.log('incident Data:' , incidentData);
+
+          // **Check if incidentData and incidentData.devices exist before trying to access them**
+          if (!incidentData || !incidentData.devices || incidentData.devices.length === 0) {
+            console.error('No devices found or incident data is missing.');
+            return;
+        }
 
         // Define the payload to be sent with the PUT request
         const payload = {
@@ -48,7 +60,7 @@ function ChangeStatusDialog({ open, onClose, deviceId, showSnackbar, loadInciden
 
         // Make an HTTP PUT request to update the device status
         axios
-            .put(updateStatusEndpoint, payload , config)
+            .put(updateStatusEndpoint, payload, config)
             .then((response) => {
                 // Handle the success response (e.g., update UI)
                 console.log('Device status updated successfully');

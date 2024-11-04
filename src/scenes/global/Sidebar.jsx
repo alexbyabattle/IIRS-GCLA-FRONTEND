@@ -12,6 +12,7 @@ import image from "../../data/image";
 import { ReportProblemOutlined } from "@mui/icons-material";
 import { CheckCircleOutline } from "@mui/icons-material";
 import { Report } from "@mui/icons-material";
+import { jwtDecode } from 'jwt-decode';
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -31,22 +32,31 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
   );
 };
 
+// Function to decode JWT and get user details
+const getUserDetailsFromToken = () => {
+  const accessToken = localStorage.getItem('accessToken');
+  if (accessToken) {
+    try {
+      const decodedToken = jwtDecode(accessToken);
+      const { id, role, department } = decodedToken;
+      return { id, role, department };
+    } catch (error) {
+      console.error('Error decoding token:', error);
+    }
+  }
+  return null;
+};
+
 const Sidebar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
-  const [role, setRole] = useState("");
-  const [department, setDepartment] = useState("");
 
-  useEffect(() => {
-    // Get user role and department from local storage
-    const userRole = localStorage.getItem("role");
-    const userDepartment = localStorage.getItem("department");
-    
-    setRole(userRole);
-    setDepartment(userDepartment);
-  }, []);
+  const userDetails = getUserDetailsFromToken();
+  const role = userDetails?.role;
+  const department = userDetails?.department;
+  
 
   return (
     <Box
@@ -162,6 +172,13 @@ const Sidebar = () => {
                 <Item
                   title="REQUISITION FORM"
                   to="/request"
+                  icon={<RequestPageOutlined />}
+                  selected={selected}
+                  setSelected={setSelected}
+                />
+                <Item
+                  title="REPORT FORM"
+                  to="/form"
                   icon={<RequestPageOutlined />}
                   selected={selected}
                   setSelected={setSelected}

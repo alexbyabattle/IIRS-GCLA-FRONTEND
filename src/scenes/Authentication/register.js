@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom'; // Import Link
 import image from '../../data/image';
 
+
 const initialValues = {
     name: '',
     email: '',
@@ -45,13 +46,7 @@ const Register = () => {
     const handleFormSubmit = async (values) => {
         try {
             const response = await axios.post('http://localhost:8082/api/v1/auth/register', values);
-            const { id, name, email, accessToken } = response.data;
-
-            // Store user details and accessToken in local storage
-            localStorage.setItem('userId', id);
-            localStorage.setItem('name', name);
-            localStorage.setItem('email', email);
-            localStorage.setItem('accessToken', accessToken);
+            
             showSnackbar('Registration successful.', 'success');
 
             // Redirect to another page after successful registration
@@ -86,9 +81,9 @@ const Register = () => {
                 <Box width={{ xs: '100%', md: '50%' }} height="100%">
                     <img
                         alt="gcla admin"
-                        width="100%"
-                        height="600px"
-                        src={image.george}
+                        width="1000px"
+                        height="1000px"
+                        src={image.gcla1}
                         style={{ objectFit: 'cover' }} // Adjust image styling
                     />
                 </Box>
@@ -222,7 +217,7 @@ const Register = () => {
                     <Box mt={2} display="flex" justifyContent="center">
                         <Typography variant="body1">
                             Already have an account?{' '}
-                            <Link to="/" style={{ color: 'blue', textDecoration: 'underline' }}>
+                            <Link to="/login" style={{ color: 'blue', textDecoration: 'underline' }}>
                                 Click here to login
                             </Link>
                         </Typography>

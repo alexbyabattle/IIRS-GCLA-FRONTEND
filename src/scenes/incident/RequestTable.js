@@ -9,8 +9,7 @@ import { tokens } from "../../theme";
 import { useTheme } from "@mui/material";
 import axios from 'axios';
 import DeleteDialog from './DeleteIncidentDialog';
-import IncidentDetails from './IncidentDetails';
-import EditIncidentDetails from './EditIncidentDetails';
+import RequestDetails from './RequestDetails';
 import { useNavigate } from 'react-router-dom';
 
 const AdminRequest = () => {
@@ -23,7 +22,6 @@ const AdminRequest = () => {
   const [snackbarColor, setSnackbarColor] = useState('success');
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedIncidentIdForDetails, setSelectedIncidentIdForDetails] = useState(null);
   const [selectedIncidentIdForEditing, setSelectedIncidentIdForEditing] = useState(null);
   const navigate = useNavigate();
 
@@ -94,9 +92,9 @@ const AdminRequest = () => {
     loadIncidents();
   };
 
-  const openIncidentDetailsPage = (incidentId) => {
+  const openRequestDetailsPage = (incidentId) => {
     if (incidentId) {
-      setSelectedIncidentIdForDetails(incidentId);
+      console.log('ID for  the request:', incidentId);
       navigate(`/requestDetails/${incidentId}`);
     }
   };
@@ -150,7 +148,7 @@ const AdminRequest = () => {
               <Delete style={{ color: "red" }} />
             </IconButton>
             
-            <IconButton color="success" onClick={() => openIncidentDetailsPage(row.id)} >
+            <IconButton color="success" onClick={() => openRequestDetailsPage(row.id)} >
               <VisibilityOutlinedIcon style={{ color: "green" }} />
             </IconButton>
           </Box>
@@ -168,8 +166,9 @@ const AdminRequest = () => {
         loadIncidents={loadIncidents}
         showSnackbar={showSnackbar}
       />
-      <IncidentDetails id={selectedIncidentIdForDetails} />
-      <EditIncidentDetails id={selectedIncidentIdForEditing} />
+
+      
+      
       <Box
         style={{
           padding: 20,

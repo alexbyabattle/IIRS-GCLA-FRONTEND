@@ -7,12 +7,31 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import { Logout } from "@mui/icons-material";
 import SignOutDialog from "../Authentication/SignOutDialog";
+import { jwtDecode } from 'jwt-decode'; 
 
 const Topbar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const navigate = useNavigate(); // Initialize useNavigate
+
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
+
+  const userDetails = getUserDetailsFromToken();
+  
 
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
@@ -30,13 +49,16 @@ const Topbar = () => {
   };
 
   const handleUserDetailsOpen = () => {
-    const userId = localStorage.getItem('userId'); 
-    if (userId) {
-      navigate(`/userDetails/${userId}`); 
+    const id = userDetails?.id;
+    if (id) {
+      navigate(`/userDetails/${id}`); 
     } else {
       console.error("User ID not found in local storage");
     }
   };
+
+  
+
 
   return (
     <>

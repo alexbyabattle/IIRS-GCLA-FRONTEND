@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import {
   Typography,
   Box,
@@ -19,7 +17,8 @@ import ChangeStatusDialog from '../device/ChangeDeviceStatus';
 import { useTheme } from '@mui/material';
 import UnassignDialog from './IncidentUnassignmentDialog';
 import image from '../../data/image';
-import { PictureAsPdf } from '@mui/icons-material';
+import { jwtDecode } from 'jwt-decode'; 
+import { useNavigate } from 'react-router-dom';
 
 const IncidentDetails = () => {
   const { id } = useParams(); // Extract the id parameter from the route
@@ -30,8 +29,7 @@ const IncidentDetails = () => {
   const [incidentData, setIncidentData] = useState(null);
 
   const loadIncidentDetails = () => {
-    console.log('Fetching incident details for ID:', id);
-
+    
     const accessToken = localStorage.getItem('accessToken');
 
     if (!accessToken) {
@@ -44,11 +42,15 @@ const IncidentDetails = () => {
         Authorization: `Bearer ${accessToken}`
       }
     };
+    
+
+    // Log the deviceId before making the request
+    //console.log('Incident ID  to  be  filled:', id);
 
     axios
       .get(`http://localhost:8082/api/incident/${id}`, config)
       .then((response) => {
-        console.log('Response data:', response.data);
+
         const { data } = response.data;
         setIncidentData(data);
       })
@@ -61,30 +63,31 @@ const IncidentDetails = () => {
     loadIncidentDetails();
   }, [id]);
 
-  // PDF Generation function
-  const generatePDF = () => {
-    const input = document.getElementById('incident-details');
-    if (input) {
-      html2canvas(input, { scale: 2 }).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save(`incident_${id}_details.pdf`);
-      });
-    } else {
-      console.error('Element with ID "incident-details" not found.');
+  
+
+  const getUserDetailsFromToken = () => {
+
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
     }
+    return null;
   };
 
-  // Retrieve user role from local storage
-  const userRole = localStorage.getItem('role');
+  const userDetails = getUserDetailsFromToken();
+
+  const userRole = userDetails?.role;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const openIncidentAssignmentDialog = (incidentId) => {
+  const openIncidentAssignmentDialog = (id) => {
     setIsDialogOpen(true);
   };
 
@@ -97,6 +100,7 @@ const IncidentDetails = () => {
   const [isIswToIncidentDialogOpen, setIsIswToIncidentDialogOpen] = useState(false);
 
   const openIncidentSolvingWayDialog = (incidentId) => {
+    console.log("Opening dialog for incident ID:", incidentId);
     setIsIswToIncidentDialogOpen(true);
   };
 
@@ -127,23 +131,27 @@ const IncidentDetails = () => {
     setSnackbarOpen(true);
   };
 
-  return (
-    <Container maxWidth="lg">
-      {/* Button to generate PDF */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<PictureAsPdf />}
-          onClick={generatePDF}
-          disabled={!incidentData}
-        >
-          Download PDF
-        </Button>
-      </Box>
+  const navigate = useNavigate();
 
+  // handling  displaying of incident Form 
+  const openIncidentForm = (id) => {
+    if (id) {
+      navigate(`/incidentForm/${id}`);
+    }
+  };
+
+  return (
+    <Container maxWidth="lg"  id="incident-details" > 
+       <Button
+          onClick={() => openIncidentForm(id)}
+          color="secondary"
+          variant="contained"
+          sx={{ width: "120px", height: "30px" }}
+        >
+          VIEW REPORT
+        </Button>
       {/* Container for incident details */}
-      <Box id="incident-details" elevation={3} sx={{ padding: '5px', marginBottom: '5px', border: `1px solid ${borderColor}`, marginLeft: "5px", marginRight: "5px" }}>
+      
         {incidentData && (
           <Box elevation={3} sx={{ padding: '5px', marginBottom: '5px', border: `1px solid ${borderColor}`, marginLeft: "5px", marginRight: "5px" }}>
             <Box height="100px" sx={{ padding: 0, border: `1px solid ${borderColor}`, display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -226,7 +234,7 @@ const IncidentDetails = () => {
                     ))}
                   </ul>
                 </Box>
-                 <Box flex="1" >
+                <Box flex="1" >
                   <ul>
                     <strong style={{ marginLeft: '4px' }}>USER REPORTED INCIDENT: </strong>
                     {incidentData.users
@@ -254,7 +262,7 @@ const IncidentDetails = () => {
               </Box>
             </Box>
 
-           {incidentData && (
+            {incidentData && (
               <Box
                 elevation={3}
                 //height="200px"
@@ -370,6 +378,8 @@ const IncidentDetails = () => {
                             </Tooltip>
                           </Box>
                         </Box>
+
+                        
                       </Box>
 
                     </div>
@@ -382,10 +392,10 @@ const IncidentDetails = () => {
 
           </Box>
         )}
-      </Box>
+      
 
       <MyFormDialog
-        isOpen={isDialogOpen}
+        open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         incidentId={id}
         userRole={userRole}
@@ -393,22 +403,23 @@ const IncidentDetails = () => {
       />
 
       <IswToIncident
-        isOpen={isIswToIncidentDialogOpen}
+        open={isIswToIncidentDialogOpen}
         onClose={() => setIsIswToIncidentDialogOpen(false)}
         incidentId={id}
         showSnackbar={showSnackbar}
       />
 
       <ChangeStatusDialog
-        isOpen={isStatusOfDeviceDialogOpen}
+        open={isStatusOfDeviceDialogOpen}
         onClose={() => setIsStatusOfDeviceDialogOpen(false)}
         incidentId={id}
         deviceId={selectedDeviceId}
         showSnackbar={showSnackbar}
+        incidentData={incidentData}
       />
 
       <UnassignDialog
-        isOpen={isUnassignDialogOpen}
+        open={isUnassignDialogOpen}
         onClose={() => setIsUnassignDialogOpen(false)}
         deviceId={selectedDeviceId}
         showSnackbar={showSnackbar}

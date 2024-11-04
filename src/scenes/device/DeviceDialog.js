@@ -16,6 +16,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { Formik, Form, Field } from 'formik';
 import * as yup from 'yup'; 
 import dayjs from 'dayjs';
+import { jwtDecode } from 'jwt-decode'; 
 
 
 const initialValues = {
@@ -34,16 +35,36 @@ const checkoutSchema = yup.object().shape({
   dateTime: yup.date().required('Date and time is required'),
 });
 
+const getUserDetailsFromToken = () => {
+  const accessToken = localStorage.getItem('accessToken');
+  if (accessToken) {
+    try {
+      const decodedToken = jwtDecode(accessToken);
+      console.log('Decoded Token:', decodedToken);
+      const { id, role, department } = decodedToken;
+      return { id, role, department };
+    } catch (error) {
+      console.error('Error decoding token:', error);
+    }
+  }
+  return null;
+};
+
+const userDetails = getUserDetailsFromToken();
+const id = userDetails?.id;
+
 function MyFormDialog({ open, onClose, loadDevices, showSnackbar }) {
   const [selectTouched, setSelectTouched] = useState(false);
 
+  const userId = userDetails?.id;
+
   const handleFormSubmit = async (values) => {
     try {
-      const userId = localStorage.getItem('userId');
+      
       const accessToken = localStorage.getItem('accessToken');
   
-      if (!accessToken || !userId) {
-        console.error('Access token or user ID not found in local storage');
+      if (!accessToken ) {
+        console.error('Access token not found in local storage');
         return;
       }
   

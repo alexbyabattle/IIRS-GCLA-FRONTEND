@@ -92,8 +92,10 @@ const IswTable = () => {
   const [selectedIswIdForDetails, setSelectedIswIdForDetails] = useState(null);
 
   const openIswDetailsDialog = (iswId) => {
-    setSelectedIswIdForDetails(iswId);
-    setIswDetailsDialogOpen(true);
+    if (iswId) {
+      setSelectedIswIdForDetails(iswId);
+      setIswDetailsDialogOpen(true);
+    }
   };
 
   const closeIswDetailsDialog = () => {
@@ -197,10 +199,16 @@ const IswTable = () => {
             <IconButton color="secondary" onClick={() => handleDeleteClick(row.id)}>
               <Delete style={{ color: 'red' }} />
             </IconButton>
-            <IconButton color="info" onClick={() => handleEditClick(row.id)}>
+            <IconButton color="info" onClick={() => {
+              console.log('Row ID:', row.id);
+              handleEditClick(row.id);
+            }}>
               <EditOutlinedIcon />
             </IconButton>
-            <IconButton color="success" onClick={() => openIswDetailsDialog(row.id)}>
+            <IconButton color="success" onClick={() => {
+               console.log('Row ID:', row.id);
+               openIswDetailsDialog(row.id);
+            }}>
               <VisibilityOutlinedIcon style={{ color: 'green' }} />
             </IconButton>
           </Box>

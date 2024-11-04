@@ -48,7 +48,7 @@ const UserEditDialog = ({ userId, open, onClose, loadUsers }) => {
           Authorization: `Bearer ${accessToken}`,
         },
       };
-      const response = await axios.get(`http://localhost:8082/api/v1/users/get/${userId}`, config);
+      const response = await axios.get(`http://localhost:8085/api/msk/users/get/${userId}`, config);
       console.log('Fetched user data:', response.data.data);
       const userData = response.data.data;
       setUserData(userData);
@@ -85,7 +85,7 @@ const UserEditDialog = ({ userId, open, onClose, loadUsers }) => {
         },
       };
       // Send edited data to the server
-      await axios.put(`http://localhost:8082/api/v1/users/update/${userId}`, editedData, config);
+      await axios.put(`http://localhost:8085/api/msk/users/update/${userId}`, editedData, config);
 
       // Close the dialog
       onClose();

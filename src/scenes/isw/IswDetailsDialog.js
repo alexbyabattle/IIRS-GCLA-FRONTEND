@@ -14,18 +14,22 @@ import {
 const IswDetailsDialog = ({ id, open, onClose }) => {
   const [iswData, setIswData] = useState(null);
 
+  console.log('Fetching incident details for ID:', id);
+
   useEffect(() => {
-    axios
-      .get(`http://localhost:8082/api/isw/getIswWithIncidents/${id}`)
-      .then((response) => {
-        // Extract the "data" field from the response
-        const { data } = response.data;
-        setIswData(data);
-      })
-      .catch((error) => {
-        console.error('Error fetching isw details:', error);
-      });
+    if (id) {
+      axios
+        .get(`http://localhost:8082/api/isw/getIswWithIncidents/${id}`)
+        .then((response) => {
+          const { data } = response.data;
+          setIswData(data);
+        })
+        .catch((error) => {
+          console.error('Error fetching isw details:', error);
+        });
+    }
   }, [id]);
+  
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">

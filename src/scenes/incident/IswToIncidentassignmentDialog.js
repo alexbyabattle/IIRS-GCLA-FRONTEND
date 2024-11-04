@@ -97,10 +97,6 @@ function  IswToIncident({ open, onClose, loadIncidentDetails, showSnackbar , sel
   }
   
 
-  
-
-  
-
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle> Add Incident Solving  Way</DialogTitle>

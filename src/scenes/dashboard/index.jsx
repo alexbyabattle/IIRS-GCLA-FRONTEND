@@ -9,6 +9,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import TrafficIcon from "@mui/icons-material/Traffic";
 import Header from "../../components/Header";
 import StatBox from "../../components/StatBox";
+import { jwtDecode } from 'jwt-decode'; 
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -18,6 +19,26 @@ const Dashboard = () => {
   const [location, setLocation] = useState('');
   const [sameLocationIncidents, setSameLocationIncidents] = useState([]);
   const [referenceLocation, setReferenceLocation] = useState('');
+
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
+
+  const userDetails = getUserDetailsFromToken();
+  const id = userDetails?.id;
+  const userRole = userDetails?.role;
+  const userDepartment = userDetails?.department;
 
   const fetchIncidentData = async () => {
     try {
@@ -97,8 +118,8 @@ const Dashboard = () => {
     }
   };
 
-  const userRole = localStorage.getItem('role');
-  const userDepartment = localStorage.getItem('department'); 
+  
+  
 
   return (
     <Box m="20px">

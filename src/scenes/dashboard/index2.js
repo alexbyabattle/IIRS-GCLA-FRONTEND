@@ -19,6 +19,9 @@ const Dashboard = () => {
   const [sameLocationIncidents, setSameLocationIncidents] = useState([]);
   const [referenceLocation, setReferenceLocation] = useState('');
 
+  
+
+
   const fetchIncidentData = async () => {
     try {
       const response = await axios.get('http://localhost:8082/api/incident/list');
@@ -78,7 +81,7 @@ const Dashboard = () => {
     }
   };
 
-  const userRole = localStorage.getItem('role');
+
 
   return (
     <Box m="20px">
@@ -166,42 +169,42 @@ const Dashboard = () => {
         </Box>
 
         {userRole === 'ADMIN' || userRole === 'MANAGER' ? (
-  <Box
-    gridColumn="span 4"
-    backgroundColor={colors.primary[400]}
-    display="flex"
-    alignItems="flex-start"
-    justifyContent="flex-start"
-    flexDirection="column"
-    padding="5px"
-    minHeight="200px"
-  >
-    <Button
-      type="submit"
-      color="secondary"
-      variant="contained"
-      style={{ padding: '10px 20px', fontSize: '16px' }}
-      onClick={fetchIncidentData}
-      padding="1px"
-    >
-      Get High Priority Locations
-    </Button>
-    <Typography variant="h6" sx={{ mt: 2, fontSize: '18px' }}>
-      Incidents from the same location caused by network issue are:&nbsp;{sameLocationIncidents.length}
-    </Typography>
-    {sameLocationIncidents.length >= 5 ? (
-      <Box sx={{ mt: 2, backgroundColor: 'red', padding: '10px', borderRadius: '4px' }}>
-        <Typography variant="h6" sx={{ fontSize: '18px', color: 'white' }}>
-          There is high priority at:&nbsp;{referenceLocation}
-        </Typography>
-      </Box>
-    ) : (
-      <Typography variant="h6" sx={{ fontSize: '18px' }}>
-        The incidents occur at:&nbsp;{referenceLocation}
-      </Typography>
-    )}
-  </Box>
-) : null}
+          <Box
+            gridColumn="span 4"
+            backgroundColor={colors.primary[400]}
+            display="flex"
+            alignItems="flex-start"
+            justifyContent="flex-start"
+            flexDirection="column"
+            padding="5px"
+            minHeight="200px"
+          >
+            <Button
+              type="submit"
+              color="secondary"
+              variant="contained"
+              style={{ padding: '10px 20px', fontSize: '16px' }}
+              onClick={fetchIncidentData}
+              padding="1px"
+            >
+              Get High Priority Locations
+            </Button>
+            <Typography variant="h6" sx={{ mt: 2, fontSize: '18px' }}>
+              Incidents from the same location caused by network issue are:&nbsp;{sameLocationIncidents.length}
+            </Typography>
+            {sameLocationIncidents.length >= 5 ? (
+              <Box sx={{ mt: 2, backgroundColor: 'red', padding: '10px', borderRadius: '4px' }}>
+                <Typography variant="h6" sx={{ fontSize: '18px', color: 'white' }}>
+                  There is high priority at:&nbsp;{referenceLocation}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography variant="h6" sx={{ fontSize: '18px' }}>
+                The incidents occur at:&nbsp;{referenceLocation}
+              </Typography>
+            )}
+          </Box>
+        ) : null}
 
 
 

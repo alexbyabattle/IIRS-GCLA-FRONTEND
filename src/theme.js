@@ -15,6 +15,7 @@ export const tokens = (mode) => ({
           700: "#3d3d3d",
           800: "#292929",
           900: "#141414",
+          1000: "#f20f0f",
         },
         primary: {
           100: "#d0d1d5",
@@ -63,21 +64,21 @@ export const tokens = (mode) => ({
       }
     : {
         grey: {
-          100: "#141414",
-          200: "#292929",
+          100: "#000000",  // color of the  words  at the sidebar of card
+          200: "#080000",
           300: "#3d3d3d",
           400: "#525252",
           500: "#666666",
           600: "#858585",
           700: "#a3a3a3",
-          800: "#c2c2c2",
+          800: "#db0d0d",
           900: "#e0e0e0",
         },
         primary: {
           100: "#040509",
-          200: "#080b12",
+          200: "#8a0307",
           300: "#0c101b",
-          400: "#f2f0f0", // manually changed almost white
+          400: "#b4aff0", // this  for all cards of dashboard and sideBar
           500: "#141b2d",
           600: "#1F2A40",  // backgroung  at the left 
           700: "#727681",
@@ -89,8 +90,8 @@ export const tokens = (mode) => ({
           200: "#1e5245",
           300: "#2e7c67",
           400: "#3da58a",
-          500: "#4cceac",
-          600: "#70d8bd",
+          500: "#010806",
+          600: "#120001",   // for the  color of  all icons at the dashboard
           700: "#94e2cd",
           800: "#b7ebde",
           900: "#dbf5ee",
@@ -150,15 +151,15 @@ export const themeSettings = (mode) => {
               main: colors.primary[100],
             },
             secondary: {
-              main: colors.greenAccent[500],
+              main: colors.greenAccent[500],        // buttons color can be changes here  directly by inserting desired color 
             },
             neutral: {
               dark: colors.grey[700],
-              main: colors.grey[500],
+              main: colors.grey[1000],
               light: colors.grey[100],
             },
             background: {
-              default: "#fcfcfc",
+              default: "#f2e6e6",      //  this  so  as to change  the background color at the  right of page
             },
           }),
     },
@@ -188,7 +189,9 @@ export const themeSettings = (mode) => {
       h6: {
         fontFamily: ["Source Sans Pro", "sans-serif"].join(","),
         fontSize: 14,
+        color: mode === "light" ? "#000000" : colors.grey[100], // Pure black in light mode
       },
+      
     },
   };
 };

@@ -28,10 +28,10 @@ import ReportIncident from "./scenes/Reportpage/ReportIncident";
 import RequestPage from "./scenes/Reportpage/RequestForm";
 import IncidentDetails from "./scenes/incident/IncidentDetails";
 import RequestDetails from "./scenes/incident/RequestDetails";
-import EditIncidentDetails from "./scenes/incident/EditIncidentDetails";
 import Incidents from "./scenes/Requests/Incidents";
 import AdminRequest from "./scenes/incident/RequestTable";
 import ReportForm from "./scenes/Reportpage/ReportForm";
+import LandingPage from "./scenes/LandingPages/LandingPage";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -40,12 +40,13 @@ function App() {
 
   // Function to determine whether to display Sidebar
   const displaySidebar = () => {
-    return !['/home', '/', '/register', '/reportForm'].includes(location.pathname);
+    return !['/home', '/login', '/', '/register', '/reportForm', '/incidentForm/:id'].includes(location.pathname) && 
+           !location.pathname.startsWith('/incidentForm/'); // Exclude any route starting with /incidentForm/
   };
 
   // Function to determine whether to display toolbar
   const displayToolbar = () => {
-    return !['/home', '/', '/register', '/incidentDetails/:id'].includes(location.pathname);
+    return !['/home', '/', '/register', '/login', '/incidentDetails/:id'].includes(location.pathname);
   };
 
   return (
@@ -57,7 +58,8 @@ function App() {
           <main className="content">
             {displayToolbar() && <Topbar setIsSidebar={setIsSidebar} />}
             <Routes>
-              <Route path="/" element={<Login />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/home" element={<Home />} />
 
@@ -65,16 +67,16 @@ function App() {
               <Route path="/team" element={<Team />} />
               <Route path="/deviceDetails/:id" element={<DeviceDetails />} />
               <Route path="/userDetails/:id" element={<UserDetails />} />
+              <Route path="/incidentForm/:id" element={<ReportForm />} />
               <Route path="/device" element={<DeviceTable />} />
               <Route path="/user" element={<UserTable />} />
               <Route path="/isw" element={<IswTable />} />
               <Route path="/role" element={<RoleTable />} />
-              <Route path="/edit/:id" element={<EditIncidentDetails />} />
               <Route path="/incidents" element={<Incidents />} />
               <Route path="/incidentDetails/:id" element={<IncidentDetails />} />
               <Route path="/requestDetails/:id" element={<RequestDetails />} />
               <Route path="/report" element={<ReportIncident />} />
-              <Route path="/reportForm" element={<ReportForm />} />
+              <Route path="/form" element={<ReportForm />} />
               <Route path="/request" element={<RequestPage />} />
               <Route path="/viewRequest" element={<Request />} />
               <Route path="/allRequest" element={<AdminRequest />} />

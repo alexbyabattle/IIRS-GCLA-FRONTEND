@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { Category } from '@mui/icons-material';
 import { useTheme } from '@mui/material';
 import image from '../../data/image';
+import { jwtDecode } from 'jwt-decode';
 
 const initialValues = {
   incidentTitle: '',
@@ -50,11 +51,28 @@ const IncidentPage = () => {
 
   const navigate = useNavigate();
 
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
+
+  const userDetails = getUserDetailsFromToken();
+
   const handleClassify = async (values) => {
     try {
       setLoading(true);
 
-      const userId = localStorage.getItem('userId');
+      const userId = userDetails?.id;
       const accessToken = localStorage.getItem('accessToken');
 
       if (!accessToken || !userId) {
@@ -113,11 +131,14 @@ const IncidentPage = () => {
     onSubmit: handleClassify,
   });
 
+  
+  
+
   useEffect(() => {
     // Fetch devices from API
     const getDevices = async () => {
       try {
-        const userId = localStorage.getItem('userId');
+        const userId = userDetails?.id;
         const accessToken = localStorage.getItem('accessToken');
 
         if (!accessToken || !userId) {

@@ -8,7 +8,7 @@ import {
   Avatar,
   Typography,
   Snackbar,
-  Link, 
+  Link,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -48,28 +48,26 @@ const Login = () => {
         email: values.email,
         password: values.password,
       };
-  
+
       const response = await axios.post('http://localhost:8082/api/v1/auth/authenticate', formattedData);
-  
-      const { message, access_token, refresh_token, id, userName, email, role , department } = response.data;
-  
+
+      const { message, access_token, refresh_token  } = response.data;
+
+
+      localStorage.clear();
       // Store the token in local storage
-      localStorage.setItem('userId', id);
-      localStorage.setItem('userName', userName);
-      localStorage.setItem('email', email);
       localStorage.setItem('accessToken', access_token);
       localStorage.setItem('refreshToken', refresh_token);
-      localStorage.setItem('role', role);
-      localStorage.setItem('department', department);
-  
+      
+
       showSnackbar(message, 'success');
-  
+
       // Redirect to another page after successful login
       navigate('/dashboard');
     } catch (error) {
       // Reset form values
       formik.resetForm();
-  
+
       // Handle network error or other issues
       showSnackbar('User failed to log in with incorrect credentials.', 'error');
     }
@@ -99,10 +97,10 @@ const Login = () => {
       justifyContent="center"
       boxShadow={3}
     >
-       <Typography component="h5" variant="h5" mb={1} color="white">
-          GOVERNMENT CHEMITRY  LABORATORY  AUTHORITY
-       </Typography>
-      
+      <Typography component="h5" variant="h5" mb={1} color="white">
+        GOVERNMENT CHEMITRY  LABORATORY  AUTHORITY
+      </Typography>
+
       <Avatar sx={{ m: 2, bgcolor: 'secondary.main', width: 100, height: 100 }}>
         <img
           alt="gcla admin"
@@ -171,6 +169,18 @@ const Login = () => {
             Click here to register
           </Link>
         </Typography>
+        
+      </Box>
+
+      {/* Link to go back to HomePage */}
+      <Box mt={2} display="flex" justifyContent="center">
+        <Typography variant="body1">
+          Go  back to {' '}
+          <Link to={`${baseUrl}/`} component={RouterLink} style={{ color: 'blue', textDecoration: 'underline' }}>
+             Homepage
+          </Link>
+        </Typography>
+        
       </Box>
 
       <Snackbar

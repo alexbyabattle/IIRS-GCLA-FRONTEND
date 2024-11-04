@@ -35,10 +35,12 @@ const DeviceDetails = () => {
       }
     };
 
+    console.log('Fetching device details for ID:', id);
+
     axios
       .get(`http://localhost:8082/api/v1/device/get/${id}`, config)
       .then((response) => {
-        console.log('Response data:', response.data);
+        
         const { data } = response.data;
         setDeviceData(data);
       })

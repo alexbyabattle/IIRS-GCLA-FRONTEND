@@ -6,13 +6,11 @@ import { Delete } from "@mui/icons-material";
 import Header from "../../components/Header";
 import axios from "axios";
 import { useState, useEffect } from "react";
-
 import UserEditDialog from "./UserEditDialog";
 import UserDetails from "./UserDetails";
 import DeleteDialog from "./DeleteUserDialog";
 import { tokens } from "../../theme";
 import { useNavigate } from 'react-router-dom';
-
 
 
 const UserTable = () => {
@@ -171,11 +169,6 @@ const UserTable = () => {
     }
   };
 
-
-
-
-
-
   const columns = [
     { field: "id", headerName: "ID" },
     {
@@ -282,13 +275,11 @@ const UserTable = () => {
 
 
     <Box m="0px">
-      
 
-
-
-      <UserDetails
-        id={selectedUserIdForDetails}
-      />
+      {/* Conditionally render UserDetails only if a user is selected */}
+      {selectedUserIdForDetails && (
+        <UserDetails id={selectedUserIdForDetails} />
+      )}
 
 
       <UserEditDialog
@@ -324,7 +315,7 @@ const UserTable = () => {
           marginRight: '20px'
         }}
       >
-         <Header title="USERS" />
+        <Header title="USERS" />
 
         <Box
           m="0"

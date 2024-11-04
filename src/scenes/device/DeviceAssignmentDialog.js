@@ -48,7 +48,6 @@ function MyFormDialog({ open, onClose, loadDeviceDetails, showSnackbar, selected
       };
 
       const postData = {
-        deviceIds: selectedDevices,
         userIds: selectedUsers.map((user) => user.id), // Extracting IDs from selected users
       };
 

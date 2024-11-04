@@ -9,8 +9,7 @@ import { tokens } from "../../theme";
 import { useTheme } from "@mui/material";
 import axios from 'axios';
 import DeleteDialog from './DeleteIncidentDialog';
-import RequestDetails from './RequestDetails';
-import EditIncidentDetails from './EditIncidentDetails';
+//import IncidentDetails from './IncidentDetails';
 import { useNavigate } from 'react-router-dom';
 
 const IncidentTable = () => {
@@ -101,12 +100,10 @@ const IncidentTable = () => {
   };
 
   // handling displaying of details
-  const [selectedIncidentIdForDetails, setSelectedIncidentIdForDetails] = useState(null);
   const navigate = useNavigate();
 
   const openIncidentDetailsPage = (incidentId) => {
     if (incidentId) {
-      setSelectedIncidentIdForDetails(incidentId);
       navigate(`/incidentDetails/${incidentId}`);
     }
   };
@@ -241,13 +238,9 @@ const IncidentTable = () => {
         showSnackbar={showSnackbar}
       />
 
-      <RequestDetails
-        id={selectedIncidentIdForDetails}
-      />
+      
 
-      <EditIncidentDetails
-        id={selectedIncidentIdForEditing}
-      />
+     
 
       <Box
         style={{
