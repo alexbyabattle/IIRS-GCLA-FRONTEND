@@ -9,12 +9,11 @@ import {
   Button,
   Paper,
   Typography,
+  
 } from '@mui/material';
 
 const IswDetailsDialog = ({ id, open, onClose }) => {
   const [iswData, setIswData] = useState(null);
-
-  console.log('Fetching incident details for ID:', id);
 
   useEffect(() => {
     if (id) {
@@ -32,6 +31,7 @@ const IswDetailsDialog = ({ id, open, onClose }) => {
   
 
   return (
+    
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>INCIDENT SOLVING WAY DETAILS</DialogTitle>
       <DialogContent>
@@ -91,6 +91,8 @@ const IswDetailsDialog = ({ id, open, onClose }) => {
         </Button>
       </DialogActions>
     </Dialog>
+
+    
   );
 };
 

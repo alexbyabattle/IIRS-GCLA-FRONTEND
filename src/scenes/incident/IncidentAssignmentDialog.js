@@ -9,6 +9,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -27,49 +29,65 @@ const checkoutSchema = yup.object().shape({
   dateTime: yup.date().required('Date and time is required'),
 });
 
-function MyFormDialog({ open, onClose, loadIncidentDetails, showSnackbar, selectedIncidents }) {
+function MyFormDialog({ open, onClose, loadIncidentDetails, incidentId }) {
   const [selectTouched, setSelectTouched] = useState(false);
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const selectedIncidents = [incidentId];
 
   const handleIncidentAssignment = async (values) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-
       if (!accessToken) {
-        console.error('Access token  not found in local storage');
+        console.error('Access token not found in local storage');
         return;
       }
 
       const config = {
         headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       };
 
       const postData = {
-        incidentIds: selectedIncidents, 
-        userIds: values.selectedUsers, 
+        incidentIds: selectedIncidents,
+        userIds: values.selectedUsers,
       };
 
-      const response = await axios.post('http://localhost:8082/api/incident/assignment', postData , config );
+      
+
+      const response = await axios.post('http://localhost:8082/api/incident/assignment', postData, config);
 
       if (response.status === 200) {
-        const responseCode = response.data.header.responseCode;
         const responseStatus = response.data.header.responseStatus;
 
-        const snackbarColor = responseCode === 0 ? 'success' : 'error';
+        // Show success snackbar
+        setSnackbar({
+          open: true,
+          message: responseStatus,
+          severity: 'success',
+        });
 
-        showSnackbar(snackbarColor, responseStatus);
-        loadIncidentDetails();
-        onClose();
         setSelectTouched(false);
+        onClose();
+        loadIncidentDetails();
       } else {
-        showSnackbar('error', response.data.header.responseStatus);
-        console.error('Error: Something went wrong with the API request');
+        // Show error snackbar
+        setSnackbar({
+          open: true,
+          message: response.data.header.responseStatus,
+          severity: 'error',
+        });
       }
     } catch (error) {
       console.error('Error:', error);
+      setSnackbar({
+        open: true,
+        message: 'An error occurred. Please try again.',
+        severity: 'error',
+      });
     }
   };
 
@@ -77,7 +95,6 @@ function MyFormDialog({ open, onClose, loadIncidentDetails, showSnackbar, select
     const getUsers = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken');
-
         if (!accessToken) {
           console.error('Access token not found in local storage');
           return;
@@ -90,10 +107,7 @@ function MyFormDialog({ open, onClose, loadIncidentDetails, showSnackbar, select
         };
 
         const response = await axios.get('http://localhost:8082/api/v1/users/all', config);
-        
-        // Filter users whose department is IT and role is admin
         const filteredUsers = response.data.data.filter(user => user.department === 'IT' && user.role === 'ADMIN');
-        
         setUsers(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -103,86 +117,102 @@ function MyFormDialog({ open, onClose, loadIncidentDetails, showSnackbar, select
     getUsers();
   }, []);
 
+  // Close Snackbar
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle> ASSIGN INCIDENT TO PARTICULAR ADMIN </DialogTitle>
-      <DialogContent>
-        <Formik
-          initialValues={initialValues}
-          validationSchema={checkoutSchema}
-          onSubmit={handleIncidentAssignment}
-        >
-          {({ values, errors, touched, handleBlur, handleChange, setFieldTouched }) => (
-            <Form>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <TextField
-                    select
-                    fullWidth
-                    variant="filled"
-                    label="IT ASSIGNED TASK"
-                    onBlur={() => {
-                      setSelectTouched(true); // Mark select as touched
-                    }}
-                    onChange={(e) => {
-                      const selectedIds = e.target.value;
-                      setSelectedUsers(selectedIds);
-                      setSelectTouched(false); // Clear the selectTouched state
-                      handleChange(e);
-                    }}
-                    value={values.selectedUsers}
-                    name="selectedUsers"
-                    helperText={selectTouched && values.selectedUsers.length === 0 && 'At least one user must be selected'}
-                    SelectProps={{
-                      multiple: true,
-                      renderValue: (selected) => {
-                        return selected
-                          .map((selectedUser) => {
-                            const user = users.find((user) => user.id === selectedUser);
-                            return user ? user.name : '';
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>ASSIGN INCIDENT TO PARTICULAR ADMIN</DialogTitle>
+        <DialogContent>
+          <Formik
+            initialValues={initialValues}
+            validationSchema={checkoutSchema}
+            onSubmit={handleIncidentAssignment}
+          >
+            {({ values, handleChange }) => (
+              <Form>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      select
+                      fullWidth
+                      variant="filled"
+                      label="IT ASSIGNED TASK"
+                      onBlur={() => setSelectTouched(true)}
+                      onChange={(e) => {
+                        const selectedIds = e.target.value;
+                        setSelectedUsers(selectedIds);
+                        handleChange(e);
+                      }}
+                      value={values.selectedUsers}
+                      name="selectedUsers"
+                      helperText={
+                        selectTouched && values.selectedUsers.length === 0 && 'At least one user must be selected'
+                      }
+                      SelectProps={{
+                        multiple: true,
+                        renderValue: (selected) =>
+                          selected
+                            .map((selectedUser) => {
+                              const user = users.find((user) => user.id === selectedUser);
+                              return user ? user.name : '';
+                            })
+                            .join(', '),
+                      }}
+                    >
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <Grid item xs={6}>
+                      <DateTimePicker
+                        value={values.dateTime}
+                        onChange={(newValue) =>
+                          handleChange({
+                            target: { name: 'dateTime', value: newValue },
                           })
-                          .join(', ');
-                      },
-                    }}
-                  >
-                    {users.map((user) => (
-                      <MenuItem key={user.id} value={user.id}>
-                        {user.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                        }
+                        disableFuture
+                        views={['year', 'month', 'day', 'hours', 'minutes']}
+                      />
+                    </Grid>
+                  </LocalizationProvider>
                 </Grid>
 
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <Grid item xs={6}>
-                    <div style={{ marginTop: '10px' }} />
-                    <DateTimePicker
-                      value={values.dateTime}
-                      onChange={(newValue) =>
-                        handleChange({
-                          target: { name: 'dateTime', value: newValue },
-                        })
-                      }
-                      disableFuture
-                      views={['year', 'month', 'day', 'hours', 'minutes']}
-                    />
-                  </Grid>
-                </LocalizationProvider>
-              </Grid>
+                <DialogActions>
+                  <Button type="submit" variant="contained" color="secondary">
+                    Submit
+                  </Button>
+                  <Button onClick={onClose} color="secondary">
+                    Cancel
+                  </Button>
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
+        </DialogContent>
+      </Dialog>
 
-              <DialogActions>
-                <Button type="submit" variant="contained" color="secondary">
-                  Submit
-                </Button>
-                <Button onClick={onClose} color="secondary">
-                  Cancel
-                </Button>
-              </DialogActions>
-            </Form>
-          )}
-        </Formik>
-      </DialogContent>
-    </Dialog>
+      {/* Snackbar for feedback messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

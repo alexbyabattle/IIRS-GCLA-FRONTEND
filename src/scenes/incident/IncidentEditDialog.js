@@ -8,6 +8,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -23,10 +25,17 @@ const checkoutSchema = yup.object().shape({
 });
 
 const EditDialog = ({ id, open, onClose , loadIncidents }) => {
+
   const [selectTouched, setSelectTouched] = useState(false);
   const [incidents, setIncidents] = useState([]);
   const [selectedIncidents, setSelectedIncidents] = useState([]);
   const [editedData, setEditedData] = useState({});
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   
 
@@ -45,9 +54,28 @@ const EditDialog = ({ id, open, onClose , loadIncidents }) => {
     try {
       const response = await axios.put(`http://localhost:8082/api/incident/${id}`, values);
       const updatedData = response.data;
-      setEditedData(updatedData);
-      loadIsws();
-      onClose();
+      if (response.status === 200) {
+
+        setSnackbar({
+          open: true,
+          message: "selected incident is successfully edited",
+          severity: 'success',
+        });
+        setEditedData(updatedData);
+        loadIsws();
+        onClose();
+
+      } else {
+        setSnackbar({
+          open: true,
+          message: "failed to edit the selected incident",
+          severity: 'error',
+        });
+        onClose();
+        console.error('Error: Something went wrong with the API request');
+      }
+      
+      
     } catch (error) {
       console.error('Error updating isw data:', error);
       console.error('Response Data:', error.response?.data);
@@ -76,6 +104,7 @@ const EditDialog = ({ id, open, onClose , loadIncidents }) => {
   
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Edit incident solving way information</DialogTitle>
       <DialogContent>
@@ -151,6 +180,18 @@ const EditDialog = ({ id, open, onClose , loadIncidents }) => {
         </Formik>
       </DialogContent>
     </Dialog>
+     {/* Snackbar for feedback messages */}
+     <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

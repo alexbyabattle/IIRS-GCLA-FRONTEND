@@ -51,7 +51,8 @@ const UserTable = () => {
         createdAt: item.createdAt,
         status: item.status,
         roleName: item.role,
-      }));
+      }))
+      .sort((a, b) => b.id - a.id);
 
       setRows(formattedData);
 
@@ -165,7 +166,7 @@ const UserTable = () => {
   const openUserDetailsPage = (userId) => {
     if (userId) {
       setSelectedUserIdForDetails(userId);
-      navigate(`/userDetails/${userId}`);
+      navigate(`/eachUserDetails/${userId}`);
     }
   };
 

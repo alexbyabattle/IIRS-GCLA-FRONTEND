@@ -8,6 +8,8 @@ import {
   Button,
   TextField,
   Grid,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -28,6 +30,12 @@ const DeviceEditDialog = ({ deviceId, open, onClose, loadDevices }) => {
   console.log('Selected Device ID for edit:', deviceId);
   const [deviceData, setDeviceData] = useState({});
   const [editedData, setEditedData] = useState({});
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const fetchDeviceData = async (deviceId) => {
     const accessToken = localStorage.getItem('accessToken');
@@ -72,17 +80,35 @@ const DeviceEditDialog = ({ deviceId, open, onClose, loadDevices }) => {
         },
       };
       // Send edited data to the server
-      await axios.put(`http://localhost:8082/api/v1/device/${deviceId}`, editedData, config);
+      const response = await axios.put(`http://localhost:8082/api/v1/device/${deviceId}`, editedData, config);
   
-      // Close the dialog
-      onClose();
-      loadDevices();
+      if (response.status === 200) {
+
+        setSnackbar({
+          open: true,
+          message: "device is edited  successfully",
+          severity: 'success',
+        });
+        loadDevices();
+        onClose();
+
+      } else {
+        setSnackbar({
+          open: true,
+          message: "failed to edit  device",
+          severity: 'error',
+        });
+        onClose();
+        console.error('Error: Something went wrong with the API request');
+      }
+     
     } catch (error) {
       console.error('Error updating device data:', error);
     }
   };
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle> EDIT   DEVICE </DialogTitle>
       <DialogContent>
@@ -173,6 +199,18 @@ const DeviceEditDialog = ({ deviceId, open, onClose, loadDevices }) => {
         </Formik>
       </DialogContent>
     </Dialog>
+    {/* Snackbar for feedback messages */}
+    <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

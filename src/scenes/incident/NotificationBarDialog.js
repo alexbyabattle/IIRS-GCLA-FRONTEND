@@ -9,8 +9,11 @@ import {
     Box,
     Snackbar,
     Alert,
+    useTheme
 } from '@mui/material';
-
+import { tokens } from "../../theme";
+import StatBox from '../../components/StatBox';
+import { TrafficOutlined } from '@mui/icons-material';
 
 const dialogContentStyle = {
     display: 'flex',
@@ -20,8 +23,10 @@ const dialogContentStyle = {
     minHeight: '80px',
 };
 
-function ChangeIncidentStatusDialog({ open, onClose, incidentId,  loadIncidentDetails, incidentData, loadIncidents }) {
+function NotificationBarDialog({ open, onClose, incidentId, loadIncidentDetails, incidentData, loadIncidents }) {
 
+    const theme = useTheme();
+    const colors = tokens(theme.palette.mode);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     const handleSnackbarClose = () => {
@@ -29,39 +34,31 @@ function ChangeIncidentStatusDialog({ open, onClose, incidentId,  loadIncidentDe
     };
 
     const updateIncidentStatus = () => {
-        // Check if incidentData contains data
         console.log('Incident Data:', incidentData);
 
         const updateStatusEndpoint = `http://localhost:8082/api/incident/status/${incidentId}`;
 
-        // Define the payload to be sent with the PUT request
         const payload = {
             id: incidentId,
-            status: incidentData.status === 'PENDING' ? 'SOLVED' : 'PENDING'
-
+            status: incidentData.status === 'PENDING' ? 'SOLVED' : 'PENDING',
         };
 
-
-        // Make an HTTP PUT request to update the device status
         axios
             .put(updateStatusEndpoint, payload)
             .then((response) => {
-
                 if (response.status === 200) {
-
                     setSnackbar({
                         open: true,
-                        message: "incident status updated successfully",
+                        message: 'Incident status updated successfully',
                         severity: 'success',
                     });
                     loadIncidentDetails();
                     loadIncidents();
                     onClose();
-
                 } else {
                     setSnackbar({
                         open: true,
-                        message: "failed to update incident status",
+                        message: 'Failed to update incident status',
                         severity: 'error',
                     });
                     onClose();
@@ -69,36 +66,52 @@ function ChangeIncidentStatusDialog({ open, onClose, incidentId,  loadIncidentDe
                 }
             })
             .catch((error) => {
-                // Handle any errors (e.g., show an error message)
                 console.error('Error updating incident status:', error);
                 console.error('Response data:', error.response?.data);
-                // Close the dialog
                 onClose();
             });
     };
 
-
     return (
         <>
-            <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+            <Dialog
+                open={open}
+                onClose={onClose}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{
+                    style: {
+                        position: 'absolute',
+                        top: '50px', // Adjust as per the height of the notifications bar
+                        right: '20px',
+                        margin: 0,
+                    },
+                }}
+            >
                 <DialogContent style={dialogContentStyle}>
-                    <Typography variant="body1">
-                        do  you  want  to change incident status ?
-                    </Typography>
+                    <Typography variant="body1">ASSIGNED TASKS</Typography>
+                    <Box
+                        backgroundColor={colors.primary[400]}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                    >
+                        <StatBox
+                            title="GCLA"
+                            subtitle="device management"
+                            
+                            increase="priority"
+                            icon={
+                                <TrafficOutlined
+                                    sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+                                />
+                            }
+                        /> 
+                    </Box>
+
                 </DialogContent>
-                <DialogActions style={{ justifyContent: 'center' }}>
-                    <Box display="flex" justifyContent="center" mt="20px">
-                        <Button onClick={updateIncidentStatus} color="error" variant="contained">
-                            OK
-                        </Button>
-                    </Box>
-                    <Box display="flex" justifyContent="center" mt="20px">
-                        <Button onClick={onClose} color="secondary" variant="contained">
-                            Cancel
-                        </Button>
-                    </Box>
-                </DialogActions>
             </Dialog>
+
             {/* Snackbar for feedback messages */}
             <Snackbar
                 open={snackbar.open}
@@ -114,4 +127,4 @@ function ChangeIncidentStatusDialog({ open, onClose, incidentId,  loadIncidentDe
     );
 }
 
-export default ChangeIncidentStatusDialog;
+export default NotificationBarDialog;

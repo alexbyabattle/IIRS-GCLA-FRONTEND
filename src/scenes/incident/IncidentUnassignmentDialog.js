@@ -3,12 +3,14 @@ import axios from 'axios';
 import {
   Button,
   TextField,
-  MenuItem,
   Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
+  MenuItem,
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -28,10 +30,13 @@ const checkoutSchema = yup.object().shape({
   dateTime: yup.date().required('Date and time is required'),
 });
 
-function UnassignDialog({ open, onClose, loadIncidentDetails, showSnackbar, selectedIncidents }) {
+function UnassignDialog({ open, onClose, loadIncidentDetails, incidentId }) {
   const [selectTouched, setSelectTouched] = useState(false);
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const selectedIncidents = [incidentId];
 
   const handleIncidentAssignment = async (values) => {
     try {
@@ -49,36 +54,42 @@ function UnassignDialog({ open, onClose, loadIncidentDetails, showSnackbar, sele
 
       const postData = {
         incidentIds: selectedIncidents,
-        userIds: selectedUsers.map((user) => user.id), // Extracting IDs from selected users
+        userIds: values.selectedUsers,
       };
 
-      console.log('Data to be sent:', postData);
+      console.log('Selected User IDs:', postData.userIds);
+      console.log('Selected Incident IDs:', postData.incidentIds);
 
       const response = await axios.post('http://localhost:8082/api/incident/unassign', postData, config);
 
-      console.log('Response:', response);
-      console.log('Response Data:', response.data);
-
       if (response.status === 200) {
-        const responseCode = response.data.header.responseCode;
         const responseStatus = response.data.header.responseStatus;
 
-        // Determine snackbar color based on response code
-        const snackbarColor = responseCode === 0 ? 'success' : 'error';
+        // Show success snackbar
+        setSnackbar({
+          open: true,
+          message: responseStatus,
+          severity: 'success',
+        });
 
-        // Use response status as the snackbar message
-        showSnackbar(snackbarColor, responseStatus);
-        console.log('Success: Data has been posted to the API');
-        loadIncidentDetails();
-        onClose();
         setSelectTouched(false);
+        onClose();
+        loadIncidentDetails();
       } else {
-        // Use response status as the snackbar message for error cases
-        showSnackbar('error', response.data.header.responseStatus);
-        console.error('Error: Something went wrong with the API request');
+        // Show error snackbar
+        setSnackbar({
+          open: true,
+          message: response.data.header.responseStatus,
+          severity: 'error',
+        });
       }
     } catch (error) {
       console.error('Error:', error);
+      setSnackbar({
+        open: true,
+        message: 'An error occurred. Please try again.',
+        severity: 'error',
+      });
     }
   };
 
@@ -98,20 +109,8 @@ function UnassignDialog({ open, onClose, loadIncidentDetails, showSnackbar, sele
         };
 
         const response = await axios.get('http://localhost:8082/api/v1/users/all', config);
-
-         // Filter users whose department is IT and role is admin
-         const filteredUsers = response.data.data.filter(user => user.department === 'IT' && user.role === 'ADMIN');
-
-        if (response.data && response.data.data) {
-          // Map response data to format suitable for select field
-          const formattedUsers = response.data.data.map((user) => ({
-            id: user.id,
-            name: user.name,
-          }));
-          setUsers(formattedUsers , filteredUsers);
-        } else {
-          console.error('Invalid response structure:', response.data);
-        }
+        const filteredUsers = response.data.data.filter(user => user.department === 'IT' && user.role === 'ADMIN');
+        setUsers(filteredUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
       }
@@ -120,70 +119,102 @@ function UnassignDialog({ open, onClose, loadIncidentDetails, showSnackbar, sele
     getUsers();
   }, []);
 
+  // Close Snackbar
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>UNASSIGN ADMIN FROM A  INCIDENT</DialogTitle>
-      <DialogContent>
-        <Formik initialValues={initialValues} validationSchema={checkoutSchema} onSubmit={handleIncidentAssignment}>
-          {({ values, errors, touched, handleBlur, handleChange, setFieldTouched }) => (
-            <Form>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Autocomplete
-                    fullWidth
-                    multiple
-                    options={users}
-                    getOptionLabel={(option) => option.name}
-                    onChange={(event, newValue) => {
-                      setSelectedUsers(newValue);
-                      setSelectTouched(true);
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="USER TO BE UNASSIGNED INCIDENT"
-                        variant="filled"
-                        onBlur={() => {
-                          setSelectTouched(true); // Mark select as touched
-                        }}
-                        helperText={
-                          selectTouched && selectedUsers.length === 0 && 'At least one user must be selected'
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>ASSIGN INCIDENT TO PARTICULAR ADMIN</DialogTitle>
+        <DialogContent>
+          <Formik
+            initialValues={initialValues}
+            validationSchema={checkoutSchema}
+            onSubmit={handleIncidentAssignment}
+          >
+            {({ values, handleChange }) => (
+              <Form>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      select
+                      fullWidth
+                      variant="filled"
+                      label="IT ASSIGNED TASK"
+                      onBlur={() => setSelectTouched(true)}
+                      onChange={(e) => {
+                        const selectedIds = e.target.value;
+                        setSelectedUsers(selectedIds);
+                        handleChange(e);
+                      }}
+                      value={values.selectedUsers}
+                      name="selectedUsers"
+                      helperText={
+                        selectTouched && values.selectedUsers.length === 0 && 'At least one user must be selected'
+                      }
+                      SelectProps={{
+                        multiple: true,
+                        renderValue: (selected) =>
+                          selected
+                            .map((selectedUser) => {
+                              const user = users.find((user) => user.id === selectedUser);
+                              return user ? user.name : '';
+                            })
+                            .join(', '),
+                      }}
+                    >
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <Grid item xs={6}>
+                      <DateTimePicker
+                        value={values.dateTime}
+                        onChange={(newValue) =>
+                          handleChange({
+                            target: { name: 'dateTime', value: newValue },
+                          })
                         }
+                        disableFuture
+                        views={['year', 'month', 'day', 'hours', 'minutes']}
                       />
-                    )}
-                  />
+                    </Grid>
+                  </LocalizationProvider>
                 </Grid>
 
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <Grid item xs={6}>
-                    <div style={{ marginTop: '10px' }} />
-                    <DateTimePicker
-                      value={values.dateTime}
-                      onChange={(newValue) =>
-                        handleChange({
-                          target: { name: 'dateTime', value: newValue },
-                        })
-                      }
-                      disableFuture
-                      views={['year', 'month', 'day', 'hours', 'minutes']}
-                    />
-                  </Grid>
-                </LocalizationProvider>
-              </Grid>
+                <DialogActions>
+                  <Button type="submit" variant="contained" color="secondary">
+                    Submit
+                  </Button>
+                  <Button onClick={onClose} color="secondary">
+                    Cancel
+                  </Button>
+                </DialogActions>
+              </Form>
+            )}
+          </Formik>
+        </DialogContent>
+      </Dialog>
 
-              <DialogActions>
-                <Button type="submit" variant="contained" color="secondary">
-                  Submit
-                </Button>
-                <Button onClick={onClose} color="secondary">
-                  Cancel
-                </Button>
-              </DialogActions>
-            </Form>
-          )}
-        </Formik>
-      </DialogContent>
-    </Dialog>
+      {/* Snackbar for feedback messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import React  from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import {
   Button,
@@ -7,8 +7,11 @@ import {
   DialogActions,
   Typography,
   Box,
-  
+  Snackbar,
+  Alert,
+
 } from '@mui/material';
+
 
 const dialogContentStyle = {
   display: 'flex',
@@ -18,7 +21,14 @@ const dialogContentStyle = {
   minHeight: '80px',
 };
 
-function DeleteDialog({ open, onClose, incidentId, showSnackbar }) {
+function DeleteDialog({ open, onClose, incidentId }) {
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const deleteItem = () => {
     // Define the API endpoint for deleting the item
     const deleteData = `http://localhost:8082/api/incident/delete/${incidentId}`;
@@ -27,51 +37,67 @@ function DeleteDialog({ open, onClose, incidentId, showSnackbar }) {
     axios
       .delete(deleteData)
       .then((response) => {
-        // Handle the success response (e.g., update UI)
-        console.log('Item deleted successfully');
 
-        // Determine snackbar color and message based on the response code
-        const responseCode = response.data.header.responseCode;
-        const responseStatus = response.data.header.responseStatus;
+        if (response.status === 200) {
 
-       
-        if (responseCode === 0) {
-          showSnackbar('success', responseStatus);
+          setSnackbar({
+            open: true,
+            message: "selected incident is successfully deleted",
+            severity: 'success',
+          });
+
+          onClose();
+
         } else {
-          showSnackbar('error', responseStatus);
+          setSnackbar({
+            open: true,
+            message: "failed to delete the selected incident",
+            severity: 'error',
+          });
+          onClose();
+          console.error('Error: Something went wrong with the API request');
         }
-        // Close the dialog
-        onClose();
       })
       .catch((error) => {
-        // Handle any errors (e.g., show an error message)
-        console.error('Error deleting item:', error);
-        console.error('repsonse data' , error.response?.data);
-        // Close the dialog
-        onClose();
+
+        console.error('repsonse data', error.response?.data);
+
       });
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogContent style={dialogContentStyle}>
-        <Typography variant="body1">
-          Do you want to delete the specified data?
-        </Typography>
-      </DialogContent>
-      <DialogActions style={{ justifyContent: 'center' }}>
-        <Box display="flex" justifyContent="center" mt="20px">
-          <Button onClick={deleteItem} color="error" variant="contained">
-            Delete
-          </Button>
-        </Box>
-        <Box display="flex" justifyContent="center" mt="20px">
-          <Button onClick={onClose} color="secondary" variant="contained">
-            Cancel
-          </Button>
-        </Box>
-      </DialogActions>
-    </Dialog>
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+        <DialogContent style={dialogContentStyle}>
+          <Typography variant="body1">
+            Do you want to delete the specified data?
+          </Typography>
+        </DialogContent>
+        <DialogActions style={{ justifyContent: 'center' }}>
+          <Box display="flex" justifyContent="center" mt="20px">
+            <Button onClick={deleteItem} color="error" variant="contained">
+              Delete
+            </Button>
+          </Box>
+          <Box display="flex" justifyContent="center" mt="20px">
+            <Button onClick={onClose} color="secondary" variant="contained">
+              Cancel
+            </Button>
+          </Box>
+        </DialogActions>
+      </Dialog>
+      {/* Snackbar for feedback messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

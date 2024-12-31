@@ -3,12 +3,13 @@ import axios from 'axios';
 import {
   Button,
   TextField,
-  MenuItem,
   Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -33,6 +34,13 @@ function UnassignDialog({ open, onClose, loadDeviceDetails, showSnackbar, select
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
 
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const handleDeviceAssignment = async (values) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
@@ -56,25 +64,23 @@ function UnassignDialog({ open, onClose, loadDeviceDetails, showSnackbar, select
 
       const response = await axios.post('http://localhost:8082/api/v1/device/unassign', postData, config);
 
-      console.log('Response:', response);
-      console.log('Response Data:', response.data);
-
       if (response.status === 200) {
-        const responseCode = response.data.header.responseCode;
-        const responseStatus = response.data.header.responseStatus;
 
-        // Determine snackbar color based on response code
-        const snackbarColor = responseCode === 0 ? 'success' : 'error';
-
-        // Use response status as the snackbar message
-        showSnackbar(snackbarColor, responseStatus);
-        console.log('Success: Data has been posted to the API');
+        setSnackbar({
+          open: true,
+          message: "device has been unassigned from user successfully",
+          severity: 'success',
+        });
         loadDeviceDetails();
         onClose();
         setSelectTouched(false);
       } else {
-        // Use response status as the snackbar message for error cases
-        showSnackbar('error', response.data.header.responseStatus);
+
+        setSnackbar({
+          open: true,
+          message: "failed to unassign user from the device",
+          severity: 'error',
+        });
         console.error('Error: Something went wrong with the API request');
       }
     } catch (error) {
@@ -121,6 +127,7 @@ function UnassignDialog({ open, onClose, loadDeviceDetails, showSnackbar, select
   }, []);
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>UNASSIGN USER FROM A  DEVICE</DialogTitle>
       <DialogContent>
@@ -184,6 +191,18 @@ function UnassignDialog({ open, onClose, loadDeviceDetails, showSnackbar, select
         </Formik>
       </DialogContent>
     </Dialog>
+    {/* Snackbar for feedback messages */}
+    <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

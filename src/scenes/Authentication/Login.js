@@ -8,6 +8,7 @@ import {
   Avatar,
   Typography,
   Snackbar,
+  Alert,
   Link,
 } from '@mui/material';
 import { useFormik } from 'formik';
@@ -27,19 +28,13 @@ const checkoutSchema = yup.object().shape({
 });
 
 const Login = () => {
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarColor, setSnackbarColor] = useState('success');
+
   const navigate = useNavigate();
 
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const showSnackbar = (message, color) => {
-    setSnackbarMessage(message);
-    setSnackbarColor(color);
-    setSnackbarOpen(true);
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const handleFormSubmit = async (values) => {
@@ -51,25 +46,37 @@ const Login = () => {
 
       const response = await axios.post('http://localhost:8082/api/v1/auth/authenticate', formattedData);
 
-      const { message, access_token, refresh_token  } = response.data;
+
+      if (response.status === 200) {
+
+        setSnackbar({
+          open: true,
+          message: "user logged in  successfully",
+          severity: 'success',
+        });
+        const { access_token, refresh_token } = response.data;
+
+        localStorage.clear();
+        // Store the token in local storage
+        localStorage.setItem('accessToken', access_token);
+        localStorage.setItem('refreshToken', refresh_token);
+
+        // Redirect to another page after successful login
+        navigate('/dashboard');
+
+      } else {
+        setSnackbar({
+          open: true,
+          message: "failed to login  invalid credentials",
+          severity: 'error',
+        });
 
 
-      localStorage.clear();
-      // Store the token in local storage
-      localStorage.setItem('accessToken', access_token);
-      localStorage.setItem('refreshToken', refresh_token);
-      
-
-      showSnackbar(message, 'success');
-
-      // Redirect to another page after successful login
-      navigate('/dashboard');
+      }
     } catch (error) {
       // Reset form values
       formik.resetForm();
 
-      // Handle network error or other issues
-      showSnackbar('User failed to log in with incorrect credentials.', 'error');
     }
   };
 
@@ -169,7 +176,7 @@ const Login = () => {
             Click here to register
           </Link>
         </Typography>
-        
+
       </Box>
 
       {/* Link to go back to HomePage */}
@@ -177,19 +184,23 @@ const Login = () => {
         <Typography variant="body1">
           Go  back to {' '}
           <Link to={`${baseUrl}/`} component={RouterLink} style={{ color: 'blue', textDecoration: 'underline' }}>
-             Homepage
+            Homepage
           </Link>
         </Typography>
-        
-      </Box>
 
+      </Box>
+      {/* Snackbar for feedback messages */}
       <Snackbar
-        open={snackbarOpen}
+        open={snackbar.open}
         autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        message={snackbarMessage}
-        sx={{ backgroundColor: snackbarColor }}
-      />
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
     </Box>
   );
 };

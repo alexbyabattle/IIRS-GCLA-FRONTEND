@@ -8,6 +8,8 @@ import {
   Button,
   TextField,
   Grid,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { useState  } from 'react';
 import axios from 'axios';
@@ -38,10 +40,17 @@ const checkoutSchema = yup.object().shape({
 
 });
 
-function  IswToIncident({ open, onClose, loadIncidentDetails, showSnackbar , selectedIncidents }) {
+function  IswToIncident({ open, onClose, loadIncidentDetails , incidentId }) {
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+    const handleSnackbarClose = () => {
+        setSnackbar({ ...snackbar, open: false });
+      };
+
   const [selectTouched, setSelectTouched] = useState(false);
   
-  
+  const selectedIncidents = [incidentId];
 
   const handleFormSubmit = async (values) => {
     try {
@@ -71,24 +80,27 @@ function  IswToIncident({ open, onClose, loadIncidentDetails, showSnackbar , sel
   
       const response = await axios.post('http://localhost:8082/api/isw/create', postData , config );
   
-      console.log('Response:', response); // Log the response object
+      
   
       if (response.status === 200) {
-        const responseCode = response.data.header.responseCode;
-        const responseStatus = response.data.header.responseStatus;
-  
-        // Determine snackbar color based on response code
-        const snackbarColor = responseCode === 0 ? 'success' : 'error';
-  
-        // Use response status as the snackbar message
-        showSnackbar(snackbarColor, responseStatus);
-        console.log('Success: Data has been posted to the API');
+        
+        setSnackbar({
+          open: true,
+          message: " Incident solving  details saved",
+          severity: 'success',
+        });
+
         loadIncidentDetails();
         onClose();
         setSelectTouched(false);
       } else {
-        // Use response status as the snackbar message for error cases
-        showSnackbar('error', response.data.header.responseStatus);
+
+        setSnackbar({
+          open: true,
+          message: "failed to save incident solving ways  ",
+          severity: 'error',
+        });
+        
         console.error('Error: Something went wrong with the API request');
       }
     } catch (error) {
@@ -98,6 +110,7 @@ function  IswToIncident({ open, onClose, loadIncidentDetails, showSnackbar , sel
   
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle> Add Incident Solving  Way</DialogTitle>
       <DialogContent>
@@ -205,6 +218,19 @@ function  IswToIncident({ open, onClose, loadIncidentDetails, showSnackbar , sel
         </Formik>
       </DialogContent>
     </Dialog>
+
+    {/* Snackbar for feedback messages */}
+    <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

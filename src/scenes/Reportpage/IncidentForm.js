@@ -7,6 +7,7 @@ import {
   Typography,
   Container,
   Button,
+  
 
 } from '@mui/material';
 import { useTheme } from '@mui/material';
@@ -14,9 +15,10 @@ import image from '../../data/image';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { useParams } from 'react-router-dom';
-import { PictureAsPdf } from '@mui/icons-material';
+import { PictureAsPdf  } from '@mui/icons-material';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import ChangeIncidentStatusDialog from '../incident/ChangeIncidentStatusDialog';
 
 
 const ReportForm = () => {
@@ -64,6 +66,14 @@ const ReportForm = () => {
     loadIncidentDetails();
   }, [id]);
 
+  // handling opening and closing of changing status of incident Dialog  
+
+  const [isStatusOfIncidentDialogOpen, setIsStatusOfIncidentDialogOpen] = useState(false);
+
+  const openStatusOfIncidentDialog = (incidentId) => {
+    setIsStatusOfIncidentDialogOpen(true);
+  };
+
   const getUserDetailsFromToken = () => {
     const accessToken = localStorage.getItem('accessToken');
     if (accessToken) {
@@ -101,7 +111,7 @@ const ReportForm = () => {
 
   return (
     <Box>
-      <Box style={{  marginTop: '0px', marginLeft: '300px' }}>
+      <Box style={{ marginTop: '0px', marginLeft: '300px' }}>
         <Button
           variant="contained"
           color="primary"
@@ -111,15 +121,24 @@ const ReportForm = () => {
         >
           Download PDF
         </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => openStatusOfIncidentDialog(incidentData.id)}
+          disabled={!incidentData}
+        >
+           CHANGE STATUS
+        </Button>
+        
       </Box>
       <Container
-        id="incident-details" 
+        id="incident-details"
         maxWidth="lg"  // Set to a larger maxWidth or use "xl" for extra large
         sx={{
           backgroundColor: 'white',
           padding: '10px',
           width: '55%', // Ensure it occupies full width
-          
+
           height: '1000px', // Reduced height
           color: 'black', // Set text color to black
           '& .MuiTextField-root, & .MuiTypography-root': {
@@ -186,7 +205,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> BRANCH </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}> DAR-ES-SALAAM </span>
                 </Card>
@@ -205,7 +224,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> INCIDENT TYPE  </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>{incidentData.incidentType}</span>
                 </Card>
@@ -219,7 +238,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> MANUFACTURAL </label>
                   <span style={{ display: 'block', marginTop: '2px', marginLeft: '2px' }}>
                     {incidentData?.devices?.[0]?.manufactural || 'N/A'}
@@ -227,7 +246,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> INCIDENT PRIORITY  </label>
                   <span style={{ display: 'block', marginTop: '2px', marginLeft: '2px' }}>{incidentData.priority}</span>
                 </Card>
@@ -246,7 +265,7 @@ const ReportForm = () => {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> REPORTED BY </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.users?.[0]?.name || 'N/A'}
@@ -254,7 +273,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> DEPARTMENT </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.users?.[0]?.department || 'N/A'}
@@ -262,7 +281,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> LOCATION </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.users?.[0]?.location || 'N/A'}
@@ -292,7 +311,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> PHONE-NUMBER </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.users?.[1]?.phoneNumber || 'N/A'}
@@ -300,7 +319,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '40px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> DEPARTMENT </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.users?.[1]?.department || 'N/A'}
@@ -308,7 +327,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> ASSIGNED AT </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.users?.[1]?.createdAt || 'N/A'}
@@ -326,7 +345,7 @@ const ReportForm = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Card elevation={0}  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label>  INCIDENT CAUSED BY </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.solvingWays?.[0]?.incidentCausedBy || 'N/A'}
@@ -343,7 +362,7 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> RESOLUTION DATE </label>
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
                     {incidentData?.solvingWays?.[0]?.createdAt || 'N/A'}
@@ -351,18 +370,20 @@ const ReportForm = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> ALLOCATED TO </label>
 
                 </Card>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <Card  elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
+                <Card elevation={0} style={{ color: 'black', backgroundColor: 'white', borderColor: 'black', borderWidth: '1px', borderStyle: 'solid', height: '50px' }}>
                   <label> INCIDENT STATUS </label>
+                  
                   <span style={{ display: 'block', marginTop: '0px', marginLeft: '2px' }}>
-                    {incidentData?.solvingWays?.[0]?.incidentStatus || 'N/A'}
-                  </span>
+                    {incidentData.status || 'N/A'}
+                  </span> 
+                  
                 </Card>
               </Grid>
 
@@ -372,7 +393,17 @@ const ReportForm = () => {
           </Box>
         )}
       </Container>
+
+               <ChangeIncidentStatusDialog
+                    open={isStatusOfIncidentDialogOpen}
+                    onClose={() => setIsStatusOfIncidentDialogOpen(false)}
+                    incidentId={incidentData ? incidentData.id : null}
+                    loadIncidentDetails={loadIncidentDetails}
+                    incidentData={incidentData}
+                />
     </Box>
+
+    
   );
 };
 

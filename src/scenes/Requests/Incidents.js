@@ -14,6 +14,7 @@ import EditRequestDetailsDialog from './EditRequestDetailsDialog';
 import ChangeIncidentStatusDialog from '../incident/ChangeIncidentStatusDialog';
 import EditIncidentDetailsDialog from './EditIncidentDetailsDialog';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 
 const Incidents = () => {
@@ -40,6 +41,7 @@ const Incidents = () => {
   };
 
   const userDetails = getUserDetailsFromToken();
+  
 
   const loadIncidents = async () => {
     try {
@@ -72,16 +74,13 @@ const Incidents = () => {
           deviceName: item.devices.map((device) => device.deviceName).join(', '),
           deviceNumber: item.devices.map((device) => device.deviceNumber).join(', '),
 
-        })) : [];
+        })) : []
+        .sort((a, b) => b.id - a.id);
 
       setRows(formattedData);
 
-      if (responseData.header.responseCode === '0') {
-        showSnackbar(0, responseData.header.responseStatus);
-      }
     } catch (error) {
       console.error('Error fetching data:', error);
-      showSnackbar(1, 'Error Message');
     }
   };
 
@@ -92,21 +91,13 @@ const Incidents = () => {
 
 
 
-  // handling  opening and closing of SnackBar 
+  const navigate = useNavigate();
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarColor, setSnackbarColor] = useState('success');
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
-  const showSnackbar = (responseCode, responseStatus) => {
-    // Determine snackbar color based on responseCode
-    setSnackbarMessage(responseStatus);
-    setSnackbarColor(responseCode);
-    setSnackbarOpen(true);
+  // handling  displaying of incident Form 
+  const openIncidentForm = (id) => {
+    if (id) {
+      navigate(`/incidentForm/${id}`);
+    }
   };
 
 
@@ -242,7 +233,8 @@ const Incidents = () => {
               <EditOutlinedIcon />
             </IconButton>
 
-            <IconButton color="success" onClick={() => openIncidentDetailsDialog(row.id)} >
+            {/* <IconButton color="success" onClick={() => openIncidentDetailsDialog(row.id)} > */}
+            <IconButton color="success" onClick={() => openIncidentForm(row.id)} >
               <VisibilityOutlinedIcon style={{ color: "green" }} />
             </IconButton>
           </Box>
@@ -259,7 +251,6 @@ const Incidents = () => {
         onClose={handleDeleteDialogClose}
         incidentId={selectedIncidentId}
         loadIncidents={loadIncidents}
-        showSnackbar={showSnackbar}
       />
 
       <IncidentDetailsDialog
@@ -312,20 +303,9 @@ const Incidents = () => {
             components={{ Toolbar: GridToolbar }}
           />
         </Box>
-
-
       </Box>
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        message={snackbarMessage}
-        sx={{ backgroundColor: snackbarColor }}
-      />
     </Box>
   );
 };
-
 
 export default Incidents;

@@ -142,7 +142,7 @@ const IncidentDetails = () => {
 
   return (
     <Container maxWidth="lg"  id="incident-details" > 
-       <Button
+        <Button
           onClick={() => openIncidentForm(id)}
           color="secondary"
           variant="contained"
@@ -399,7 +399,7 @@ const IncidentDetails = () => {
         onClose={() => setIsDialogOpen(false)}
         incidentId={id}
         userRole={userRole}
-        showSnackbar={showSnackbar}
+        loadIncidentDetails={loadIncidentDetails}
       />
 
       <IswToIncident
@@ -407,6 +407,7 @@ const IncidentDetails = () => {
         onClose={() => setIsIswToIncidentDialogOpen(false)}
         incidentId={id}
         showSnackbar={showSnackbar}
+        loadIncidentDetails={loadIncidentDetails}
       />
 
       <ChangeStatusDialog
@@ -416,13 +417,15 @@ const IncidentDetails = () => {
         deviceId={selectedDeviceId}
         showSnackbar={showSnackbar}
         incidentData={incidentData}
+        loadIncidentDetails={loadIncidentDetails}
       />
 
       <UnassignDialog
         open={isUnassignDialogOpen}
         onClose={() => setIsUnassignDialogOpen(false)}
-        deviceId={selectedDeviceId}
-        showSnackbar={showSnackbar}
+        incidentId={id}
+        userRole={userRole}
+        loadIncidentDetails={loadIncidentDetails}
       />
 
       <Snackbar
@@ -430,7 +433,7 @@ const IncidentDetails = () => {
         autoHideDuration={4000}
         onClose={handleCloseSnackbar}
         message={snackbarMessage}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'buttom', horizontal: 'left' }}
         ContentProps={{
           style: {
             backgroundColor: snackbarColor === 'success' ? '#4CAF50' : snackbarColor === 'error' ? '#f44336' : '#2196F3',

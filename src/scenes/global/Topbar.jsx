@@ -5,9 +5,11 @@ import { ColorModeContext, tokens } from "../../theme";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import { Notifications } from "@mui/icons-material";
 import { Logout } from "@mui/icons-material";
 import SignOutDialog from "../Authentication/SignOutDialog";
 import { jwtDecode } from 'jwt-decode'; 
+import NotificationBarDialog from "../incident/NotificationBarDialog";
 
 const Topbar = () => {
   const theme = useTheme();
@@ -48,6 +50,19 @@ const Topbar = () => {
     setLogoutDialogOpen(false);
   };
 
+
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+
+  const handleNotificationDialogOpen = () => {
+    setNotificationDialogOpen(true);
+  };
+
+  const handleNotificationDialogClose = () => {
+    setNotificationDialogOpen(false);
+  };
+
+  
+
   const handleUserDetailsOpen = () => {
     const id = userDetails?.id;
     if (id) {
@@ -84,6 +99,9 @@ const Topbar = () => {
           <IconButton onClick={handleUserDetailsOpen}>
             <PersonOutlinedIcon />
           </IconButton>
+          <IconButton onClick={handleNotificationDialogOpen}>
+            <Notifications />
+          </IconButton>
           <IconButton onClick={handleLogoutDialogOpen}>
             <Logout />
           </IconButton>
@@ -97,6 +115,14 @@ const Topbar = () => {
         onConfirm={handleLogoutConfirm}
         setLogoutDialogOpen={setLogoutDialogOpen} // Pass setLogoutDialogOpen as a prop
       />
+
+      <NotificationBarDialog
+        open={notificationDialogOpen}
+        onClose={handleNotificationDialogClose}
+        
+      />
+
+
     </>
   );
 };

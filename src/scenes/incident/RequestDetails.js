@@ -4,7 +4,7 @@ import {
     Typography,
     Box,
     IconButton,
-    Snackbar,
+    Button,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { AddToQueue, AddCard, ChangeCircle } from '@mui/icons-material';
@@ -14,6 +14,7 @@ import IswToIncident from './IswToIncidentassignmentDialog';
 import ChangeRequestStatusDialog from './ChangeRequestStatusDialog';
 import { useTheme } from '@mui/material';
 import image from '../../data/image';
+import { useNavigate } from 'react-router-dom';
 
 
 const RequestDetails = () => {
@@ -45,14 +46,12 @@ const RequestDetails = () => {
         axios
             .get(`http://localhost:8082/api/incident/${id}`, getAuthConfig())
             .then((response) => {
-                console.log('Response data:', response.data); // Log response data
-                // Extract the "data" field from the response
+
                 const { data } = response.data;
                 setIncidentData(data);
             })
             .catch((error) => {
-                console.error('Error fetching incident details:', error);
-                // Log the entire error object for more information
+
                 console.error('Full error object:', error);
             });
     };
@@ -68,6 +67,18 @@ const RequestDetails = () => {
     const openIncidentAssignmentDialog = (incidentId) => {
         setIsDialogOpen(true);
     };
+
+    
+
+  // handling  displaying of incident Form 
+
+  const navigate = useNavigate();
+
+  const openIncidentForm = (id) => {
+    if (id) {
+      navigate(`/requestForm/${id}`);
+    }
+  };
 
 
     // handling opening and closing of solving way to incident Dialog  
@@ -89,31 +100,20 @@ const RequestDetails = () => {
     };
 
 
-
-    // handling  opening and closing of SnackBar 
-
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [snackbarColor, setSnackbarColor] = useState('success'); // Default snackbar color is 'success'
-
-    const handleCloseSnackbar = () => {
-        setSnackbarOpen(false);
-    };
-
-    const showSnackbar = (responseCode, responseStatus) => {
-        // Determine snackbar color based on responseCode
-        setSnackbarMessage(responseStatus);
-        setSnackbarColor(responseCode);
-        setSnackbarOpen(true);
-    };
-
-
     return (
 
         <Box
             elevation={3}
 
         >
+            <Button
+                onClick={() => openIncidentForm(id)}
+                color="secondary"
+                variant="contained"
+                sx={{ width: "120px", height: "30px" }}
+            >
+                VIEW REPORT
+            </Button>
             {incidentData && (
                 <Box
                     elevation={3}
@@ -177,7 +177,7 @@ const RequestDetails = () => {
                             marginLeft: "3px",
                             marginRight: "3px",
                             display: 'flex',
-                            flexDirection: 'row' 
+                            flexDirection: 'row'
                         }}
 
                     >
@@ -339,7 +339,6 @@ const RequestDetails = () => {
                 onClose={() => setIsDialogOpen(false)}
                 loadIncidentDetails={loadIncidentDetails}
                 selectedIncidents={[id]}
-                showSnackbar={showSnackbar}
             />
 
             <IswToIncident
@@ -347,7 +346,6 @@ const RequestDetails = () => {
                 onClose={() => setIsIswToIncidentDialogOpen(false)}
                 loadIncidentDetails={loadIncidentDetails}
                 selectedIncidents={[id]}
-                showSnackbar={showSnackbar}
             />
 
 
@@ -355,20 +353,12 @@ const RequestDetails = () => {
                 open={isStatusOfIncidentDialogOpen}
                 onClose={() => setIsStatusOfIncidentDialogOpen(false)}
                 incidentId={incidentData ? incidentData.id : null}
-                showSnackbar={showSnackbar}
                 loadIncidentDetails={loadIncidentDetails}
                 incidentData={incidentData}
             />
 
 
 
-            <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={4000}
-                onClose={handleCloseSnackbar}
-                message={snackbarMessage}
-                sx={{ backgroundColor: snackbarColor }}
-            />
 
         </Box>
     );

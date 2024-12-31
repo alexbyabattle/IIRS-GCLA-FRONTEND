@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, IconButton, Snackbar } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { Delete } from '@mui/icons-material';
 import Header from '../../components/Header';
@@ -9,7 +8,6 @@ import { tokens } from "../../theme";
 import { useTheme } from "@mui/material";
 import axios from 'axios';
 import DeleteDialog from './DeleteIncidentDialog';
-import RequestDetails from './RequestDetails';
 import { useNavigate } from 'react-router-dom';
 
 const AdminRequest = () => {
@@ -17,9 +15,6 @@ const AdminRequest = () => {
   const colors = tokens(theme.palette.mode);
 
   const [rows, setRows] = useState([]);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarColor, setSnackbarColor] = useState('success');
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedIncidentIdForEditing, setSelectedIncidentIdForEditing] = useState(null);
@@ -52,34 +47,22 @@ const AdminRequest = () => {
           deviceName: item.deviceName,
           quantityOfItem: item.quantityOfItem,
           status: item.status,
+          reportedAt: new Date(item.reportedAt), // Assuming the API provides a 'reportedAt' field
           userName: item.users.map((user) => user.userName).join(', '),
           phoneNumber: item.users.map((user) => user.phoneNumber).join(', '),
           location: item.users.map((user) => user.location).join(', '),
           department: item.users.map((user) => user.department).join(', '),
-        }));
+        }))
+        .sort((a, b) => b.id - a.id); // Sort by date, descending
       setRows(formattedData);
-      if (responseData.header.responseCode === '0') {
-        showSnackbar(0, responseData.header.responseStatus);
-      }
     } catch (error) {
       console.error('Error fetching data:', error);
-      showSnackbar(1, 'Error Message');
     }
   };
 
   useEffect(() => {
     loadIncidents();
   }, []);
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
-  const showSnackbar = (responseCode, responseStatus) => {
-    setSnackbarMessage(responseStatus);
-    setSnackbarColor(responseCode);
-    setSnackbarOpen(true);
-  };
 
   const handleDeleteClick = (incidentId) => {
     setSelectedIncidentId(incidentId);
@@ -94,7 +77,7 @@ const AdminRequest = () => {
 
   const openRequestDetailsPage = (incidentId) => {
     if (incidentId) {
-      console.log('ID for  the request:', incidentId);
+      console.log('ID for the request:', incidentId);
       navigate(`/requestDetails/${incidentId}`);
     }
   };
@@ -110,11 +93,11 @@ const AdminRequest = () => {
     { field: 'id', headerName: 'ID' },
     { field: 'incidentTitle', headerName: 'Incident Title', flex: 1, cellClassName: 'name-column--cell' },
     { field: 'incidentType', headerName: 'Incident Type', flex: 1, cellClassName: 'name-column--cell' },
-    { field: 'deviceName', headerName: 'deviceName', flex: 1, cellClassName: 'name-column--cell' },
-    { field: 'quantityOfItem', headerName: 'QUANTITY OF REQUEST', flex: 1, cellClassName: 'name-column--cell' },
+    { field: 'deviceName', headerName: 'Device Name', flex: 1, cellClassName: 'name-column--cell' },
+    { field: 'quantityOfItem', headerName: 'Quantity of Request', flex: 1, cellClassName: 'name-column--cell' },
     {
-      field: "status",
-      headerName: "status",
+      field: 'status',
+      headerName: 'Status',
       flex: 1,
       renderCell: ({ row }) => {
         let statusColor;
@@ -147,8 +130,7 @@ const AdminRequest = () => {
             <IconButton color="secondary" onClick={() => handleDeleteClick(row.id)}>
               <Delete style={{ color: "red" }} />
             </IconButton>
-            
-            <IconButton color="success" onClick={() => openRequestDetailsPage(row.id)} >
+            <IconButton color="success" onClick={() => openRequestDetailsPage(row.id)}>
               <VisibilityOutlinedIcon style={{ color: "green" }} />
             </IconButton>
           </Box>
@@ -164,18 +146,14 @@ const AdminRequest = () => {
         onClose={handleDeleteDialogClose}
         incidentId={selectedIncidentId}
         loadIncidents={loadIncidents}
-        showSnackbar={showSnackbar}
       />
-
-      
-      
       <Box
         style={{
           padding: 20,
           marginLeft: '20px',
-          marginRight: '20px'
+          marginRight: '20px',
         }}
-      > 
+      >
         <Header title="REQUESTS" />
         <Box
           m="0"
@@ -194,13 +172,6 @@ const AdminRequest = () => {
           />
         </Box>
       </Box>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        message={snackbarMessage}
-        sx={{ backgroundColor: snackbarColor }}
-      />
     </Box>
   );
 };

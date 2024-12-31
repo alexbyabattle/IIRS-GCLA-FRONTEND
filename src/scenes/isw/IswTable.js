@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, IconButton, Snackbar } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { DataGrid , GridToolbar } from '@mui/x-data-grid';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -43,16 +43,13 @@ const IswTable = () => {
         status: item.incidents.map((incident) =>
           incident.devices.map((device) => device.status).join(',')
         ),
-      }));
+      }))
+      .sort((a, b) => b.id - a.id);
 
       setRows(formattedData);
-
-      if (response.data.header.responseCode === 0) {
-        showSnackbar(0, response.data.header.responseStatus);
-      }
     } catch (error) {
       console.error('Error fetching data:', error);
-      showSnackbar(1, 'Error Message'); // Example usage of showSnackbar with responseCode 1
+      
     }
   };
 
@@ -60,19 +57,7 @@ const IswTable = () => {
     loadIsws();
   }, []);
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarColor, setSnackbarColor] = useState('success');
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
-  const showSnackbar = (responseCode, responseStatus) => {
-    setSnackbarMessage(responseStatus);
-    setSnackbarColor(responseCode === 0 ? 'green' : 'red'); // Adjust color based on responseCode
-    setSnackbarOpen(true);
-  };
+  
 
   const [selectedIswId, setSelectedIswId] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -225,7 +210,6 @@ const IswTable = () => {
         onClose={handleDeleteDialogClose}
         iswId={selectedIswId}
         loadIsws={loadIsws}
-        showSnackbar={showSnackbar}
       />
       <IswDetailsDialog
         id={selectedIswIdForDetails}
@@ -261,13 +245,7 @@ const IswTable = () => {
             components={{ Toolbar: GridToolbar }}
           />
         </Box>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        message={snackbarMessage}
-        sx={{ backgroundColor: snackbarColor }}
-      />
+      
     </Box>
   );
 };

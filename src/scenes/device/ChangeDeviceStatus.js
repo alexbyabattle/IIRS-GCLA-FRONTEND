@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import {
     Button,
@@ -7,7 +7,8 @@ import {
     DialogActions,
     Typography,
     Box,
-
+    Snackbar,
+    Alert
 } from '@mui/material';
 
 const dialogContentStyle = {
@@ -18,15 +19,19 @@ const dialogContentStyle = {
     minHeight: '80px',
 };
 
-function ChangeStatusDialog({ open, onClose, deviceId, showSnackbar, loadIncidentDetails, incidentData }) {
+function ChangeStatusDialog({ open, onClose, deviceId, loadIncidentDetails, incidentData }) {
+
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+    const handleSnackbarClose = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
 
     const updateDeviceStatus = () => {
-
-
         const accessToken = localStorage.getItem('accessToken');
 
         if (!accessToken) {
-            console.error('Access token  not found in local storage');
+            console.error('Access token not found in local storage');
             return;
         }
 
@@ -36,16 +41,10 @@ function ChangeStatusDialog({ open, onClose, deviceId, showSnackbar, loadInciden
             },
         };
 
-        
         const updateStatusEndpoint = `http://localhost:8082/api/v1/device/status/${deviceId}`;
 
-        // Log the deviceId before making the request
-        console.log('Device ID before updating status:', deviceId);
-
-        console.log('incident Data:' , incidentData);
-
-          // **Check if incidentData and incidentData.devices exist before trying to access them**
-          if (!incidentData || !incidentData.devices || incidentData.devices.length === 0) {
+        // Check if incidentData and incidentData.devices exist
+        if (!incidentData || !incidentData.devices || incidentData.devices.length === 0) {
             console.error('No devices found or incident data is missing.');
             return;
         }
@@ -54,60 +53,75 @@ function ChangeStatusDialog({ open, onClose, deviceId, showSnackbar, loadInciden
         const payload = {
             id: deviceId,
             status: incidentData.devices.map(device => device.status).includes('FAULT') ? 'FINE' : 'FAULT'
-
         };
-
 
         // Make an HTTP PUT request to update the device status
         axios
             .put(updateStatusEndpoint, payload, config)
             .then((response) => {
-                // Handle the success response (e.g., update UI)
-                console.log('Device status updated successfully');
-
-                // Determine snackbar color and message based on the response code
-                const responseCode = response.data.header.responseCode;
-                const responseStatus = response.data.header.responseStatus;
-
-                if (responseCode === 0) {
-                    showSnackbar('success', responseStatus);
+                // Check if the status code is 200 (OK)
+                if (response.status === 200) {
+                    console.log('Device status updated successfully');
+                    // Show success snackbar
+                    setSnackbar({
+                        open: true,
+                        message: "device's status  Updated successfully",
+                        severity: 'success',
+                    });
                 } else {
-                    showSnackbar('error', responseStatus);
+                    setSnackbar({
+                        open: true,
+                        message: "failed to upadate device status",
+                        severity: 'error',
+                    });
                 }
-                // Close the dialog
+
+                // Refresh the incident details and close the dialog
                 loadIncidentDetails();
                 onClose();
             })
             .catch((error) => {
-                // Handle any errors (e.g., show an error message)
+                // Handle any errors
                 console.error('Error updating device status:', error);
                 console.error('Response data:', error.response?.data);
-                // Close the dialog
+
                 onClose();
             });
     };
 
-
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-            <DialogContent style={dialogContentStyle}>
-                <Typography variant="body1">
-                    Do you want to change a particular device status ?
-                </Typography>
-            </DialogContent>
-            <DialogActions style={{ justifyContent: 'center' }}>
-                <Box display="flex" justifyContent="center" mt="20px">
-                    <Button onClick={updateDeviceStatus} color="error" variant="contained">
-                        OK
-                    </Button>
-                </Box>
-                <Box display="flex" justifyContent="center" mt="20px">
-                    <Button onClick={onClose} color="secondary" variant="contained">
-                        Cancel
-                    </Button>
-                </Box>
-            </DialogActions>
-        </Dialog>
+        <>
+            <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+                <DialogContent style={dialogContentStyle}>
+                    <Typography variant="body1">
+                        Do you want to change the device status?
+                    </Typography>
+                </DialogContent>
+                <DialogActions style={{ justifyContent: 'center' }}>
+                    <Box display="flex" justifyContent="center" mt="20px">
+                        <Button onClick={updateDeviceStatus} color="error" variant="contained">
+                            OK
+                        </Button>
+                    </Box>
+                    <Box display="flex" justifyContent="center" mt="20px">
+                        <Button onClick={onClose} color="secondary" variant="contained">
+                            Cancel
+                        </Button>
+                    </Box>
+                </DialogActions>
+            </Dialog>
+            {/* Snackbar for feedback messages */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+        </>
     );
 }
 

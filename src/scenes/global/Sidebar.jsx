@@ -176,13 +176,7 @@ const Sidebar = () => {
                   selected={selected}
                   setSelected={setSelected}
                 />
-                <Item
-                  title="REPORT FORM"
-                  to="/form"
-                  icon={<RequestPageOutlined />}
-                  selected={selected}
-                  setSelected={setSelected}
-                />
+                
               </>
             ) : (
               <>

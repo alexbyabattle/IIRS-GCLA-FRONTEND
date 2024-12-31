@@ -14,6 +14,7 @@ import RequestDetailsDialog from './RequestDetailsDialog';
 import DeleteDialog from '../incident/DeleteIncidentDialog';
 import { jwtDecode } from 'jwt-decode';
 import UserDetails from '../User/UserDetails';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -23,22 +24,30 @@ const Request = () => {
   const colors = tokens(theme.palette.mode);
 
   const [rows, setRows] = useState([]);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarColor, setSnackbarColor] = useState('success');
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
- 
+  const getUserDetailsFromToken = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      try {
+        const decodedToken = jwtDecode(accessToken);
+        console.log('Decoded Token:', decodedToken);
+        const { id, role, department } = decodedToken;
+        return { id, role, department };
+      } catch (error) {
+        console.error('Error decoding token:', error);
+      }
+    }
+    return null;
+  };
   
-
+  const userDetails = getUserDetailsFromToken();
   
-    
-
   const loadIncidents = async () => {
     try {
       
-      const userId = UserDetails?.id;
+      const userId = userDetails?.id;
       const accessToken = localStorage.getItem('accessToken');
 
       if (!accessToken || !userId) {
@@ -66,14 +75,12 @@ const Request = () => {
           status: item.status,
           
         
-        }));
+        }))
+        .sort((a, b) => b.id - a.id);
       setRows(formattedData);
-      if (responseData.header.responseCode === '0') {
-        showSnackbar(0, responseData.header.responseStatus);
-      }
+      
     } catch (error) {
       console.error('Error fetching data:', error);
-      showSnackbar(1, 'Error Message');
     }
   };
 
@@ -81,15 +88,18 @@ const Request = () => {
     loadIncidents();
   }, []);
 
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
+
+
+  const navigate = useNavigate();
+
+  // handling  displaying of incident Form 
+  const openIncidentForm = (id) => {
+    if (id) {
+      navigate(`/requestForm/${id}`);
+    }
   };
 
-  const showSnackbar = (responseCode, responseStatus) => {
-    setSnackbarMessage(responseStatus);
-    setSnackbarColor(responseCode);
-    setSnackbarOpen(true);
-  };
+  
 
   const handleDeleteClick = (incidentId) => {
     setSelectedIncidentId(incidentId);
@@ -180,7 +190,7 @@ const Request = () => {
             <IconButton color="info" onClick={() =>handleEditClick (row.id)} >
               <EditOutlinedIcon />
             </IconButton>
-            <IconButton color="success" onClick={() => openIncidentDetailsDialog(row.id)} >
+            <IconButton color="success" onClick={() => openIncidentForm(row.id)} >
               <VisibilityOutlinedIcon style={{ color: "green" }} />
             </IconButton>
           </Box>
@@ -196,7 +206,6 @@ const Request = () => {
         onClose={handleDeleteDialogClose}
         incidentId={selectedIncidentId}
         loadIncidents={loadIncidents}
-        showSnackbar={showSnackbar}
       />
 
       <RequestDetailsDialog
@@ -237,13 +246,7 @@ const Request = () => {
           />
         </Box>
       </Box>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        message={snackbarMessage}
-        sx={{ backgroundColor: snackbarColor }}
-      />
+      
     </Box>
   );
 };

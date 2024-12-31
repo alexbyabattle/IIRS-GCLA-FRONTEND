@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Button,
   TextField,
-  MenuItem,
   Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -26,10 +27,15 @@ const checkoutSchema = yup.object().shape({
 });
 
 const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
-  const [selectTouched, setSelectTouched] = useState(false);
-  const [incidents, setIncidents] = useState([]);
+  
   const [selectedIncidents, setSelectedIncidents] = useState([]);
   const [editedData, setEditedData] = useState({});
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+    const handleSnackbarClose = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
 
 
   const fetchIswData = async (id) => {
@@ -41,7 +47,6 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
       setSelectedIncidents(iswData.incidents.map((incident) => incident.id));
     } catch (error) {
       console.error('Error fetching isw data:', error);
-      console.error('Response Data:', error.response?.data);
     }
   };
 
@@ -60,11 +65,31 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
       const response = await axios.put(`http://localhost:8082/api/isw/editing/${id}`, values);
       const updatedData = response.data;
       setEditedData(updatedData);
-      loadIsws();
-      onClose();
+
+
+
+      if (response.status === 200) {
+
+        setSnackbar({
+          open: true,
+          message: "selected solving way is successfully edited",
+          severity: 'success',
+        });
+        loadIsws();
+        onClose();
+
+      } else {
+        setSnackbar({
+          open: true,
+          message: "failed to edit the selected  solving way",
+          severity: 'error',
+        });
+        onClose();
+        
+      }
+      
     } catch (error) {
       console.error('Error updating isw data:', error);
-      console.error('Response Data:', error.response?.data);
     }
   };  
 
@@ -84,6 +109,7 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
   
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>EDIT INCIDENT SOLVING WAYS</DialogTitle>
       <DialogContent>
@@ -188,6 +214,18 @@ const IswEditDialog = ({ id, open, onClose , loadIsws }) => {
         </Formik>
       </DialogContent>
     </Dialog>
+     {/* Snackbar for feedback messages */}
+     <Snackbar
+    open={snackbar.open}
+    autoHideDuration={4000}
+    onClose={handleSnackbarClose}
+    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+>
+    <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+        {snackbar.message}
+    </Alert>
+</Snackbar>
+</>
   );
 };
 

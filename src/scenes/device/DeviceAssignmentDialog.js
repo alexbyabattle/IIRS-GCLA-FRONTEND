@@ -3,12 +3,13 @@ import axios from 'axios';
 import {
   Button,
   TextField,
-  MenuItem,
   Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -28,10 +29,16 @@ const checkoutSchema = yup.object().shape({
   dateTime: yup.date().required('Date and time is required'),
 });
 
-function MyFormDialog({ open, onClose, loadDeviceDetails, showSnackbar, selectedDevices }) {
+function MyFormDialog({ open, onClose, loadDeviceDetails, selectedDevices }) {
   const [selectTouched, setSelectTouched] = useState(false);
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const handleDeviceAssignment = async (values) => {
     try {
@@ -49,31 +56,29 @@ function MyFormDialog({ open, onClose, loadDeviceDetails, showSnackbar, selected
 
       const postData = {
         userIds: selectedUsers.map((user) => user.id), // Extracting IDs from selected users
+        deviceIds: selectedDevices,
       };
 
       console.log('Data to be sent:', postData);
 
       const response = await axios.post('http://localhost:8082/api/v1/device/assignment', postData, config);
 
-      console.log('Response:', response);
-      console.log('Response Data:', response.data);
 
       if (response.status === 200) {
-        const responseCode = response.data.header.responseCode;
-        const responseStatus = response.data.header.responseStatus;
-
-        // Determine snackbar color based on response code
-        const snackbarColor = responseCode === 0 ? 'success' : 'error';
-
-        // Use response status as the snackbar message
-        showSnackbar(snackbarColor, responseStatus);
-        console.log('Success: Data has been posted to the API');
+        setSnackbar({
+          open: true,
+          message: "device has been assigned to user successfully",
+          severity: 'success',
+        });
         loadDeviceDetails();
         onClose();
         setSelectTouched(false);
       } else {
-        // Use response status as the snackbar message for error cases
-        showSnackbar('error', response.data.header.responseStatus);
+        setSnackbar({
+          open: true,
+          message: "failed to assign device to a user",
+          severity: 'errror',
+        });
         console.error('Error: Something went wrong with the API request');
       }
     } catch (error) {
@@ -98,9 +103,6 @@ function MyFormDialog({ open, onClose, loadDeviceDetails, showSnackbar, selected
 
         const response = await axios.get('http://localhost:8082/api/v1/users/all', config);
 
-        console.log('Response:', response);
-        console.log('Response Data:', response.data);
-
         if (response.data && response.data.data) {
           // Filter users whose department is not "IT"
           const filteredUsers = response.data.data.filter((user) => user.department !== 'IT');
@@ -112,6 +114,7 @@ function MyFormDialog({ open, onClose, loadDeviceDetails, showSnackbar, selected
           }));
           setUsers(formattedUsers);
         } else {
+
           console.error('Invalid response structure:', response.data);
         }
       } catch (error) {
@@ -124,6 +127,7 @@ function MyFormDialog({ open, onClose, loadDeviceDetails, showSnackbar, selected
 
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>ASSIGN INCIDENT TO PARTICULAR ADMIN</DialogTitle>
       <DialogContent>
@@ -187,6 +191,18 @@ function MyFormDialog({ open, onClose, loadDeviceDetails, showSnackbar, selected
         </Formik>
       </DialogContent>
     </Dialog>
+    {/* Snackbar for feedback messages */}
+    <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

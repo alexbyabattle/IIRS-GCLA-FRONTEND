@@ -1,4 +1,4 @@
-import React  from 'react';
+import React , {useState} from 'react';
 import axios from 'axios';
 import {
   Button,
@@ -7,8 +7,11 @@ import {
   DialogActions,
   Typography,
   Box,
+  Alert,
+  Snackbar,
   
 } from '@mui/material';
+
 
 const dialogContentStyle = {
   display: 'flex',
@@ -19,28 +22,40 @@ const dialogContentStyle = {
 };
 
 function DeleteDialog({ open, onClose, iswId, showSnackbar }) {
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+    const handleSnackbarClose = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
+
   const deleteItem = () => {
-    // Define the API endpoint for deleting the item
+    
     const deleteData = `http://localhost:8082/api/isw/delete/${iswId}`;
 
     // Make an HTTP DELETE request to delete the item
     axios
       .delete(deleteData)
       .then((response) => {
-        // Handle the success response (e.g., update UI)
-        console.log('Item deleted successfully');
+        if (response.status === 200) {
 
-        // Determine snackbar color and message based on the response code
-        const responseCode = response.data.header.responseCode;
-        const responseStatus = response.data.header.responseStatus;
+          setSnackbar({
+            open: true,
+            message: "selected solving way is successfully deleted",
+            severity: 'success',
+          });
 
-       
-        if (responseCode === 0) {
-          showSnackbar('success', responseStatus);
+          onClose();
+
         } else {
-          showSnackbar('error', responseStatus);
+          setSnackbar({
+            open: true,
+            message: "failed to delete the selected  solving way",
+            severity: 'error',
+          });
+          onClose();
+          console.error('Error: Something went wrong with the API request');
         }
-        // Close the dialog
         onClose();
       })
       .catch((error) => {
@@ -53,6 +68,7 @@ function DeleteDialog({ open, onClose, iswId, showSnackbar }) {
   };
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogContent style={dialogContentStyle}>
         <Typography variant="body1">
@@ -71,7 +87,20 @@ function DeleteDialog({ open, onClose, iswId, showSnackbar }) {
           </Button>
         </Box>
       </DialogActions>
+      
     </Dialog>
+    {/* Snackbar for feedback messages */}
+    <Snackbar
+    open={snackbar.open}
+    autoHideDuration={4000}
+    onClose={handleSnackbarClose}
+    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+>
+    <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+        {snackbar.message}
+    </Alert>
+</Snackbar>
+</>
   );
 }
 

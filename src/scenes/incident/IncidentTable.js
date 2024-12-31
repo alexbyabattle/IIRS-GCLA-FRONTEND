@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, IconButton, Snackbar } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { Delete } from '@mui/icons-material';
 import Header from '../../components/Header';
@@ -48,20 +47,22 @@ const IncidentTable = () => {
           status: item.status,
           deviceName: item.devices.map((device) => device.deviceName).join(', '),
           deviceNumber: item.devices.map((device) => device.deviceNumber).join(', '),
-          userName: item.users.map((user) => user.userName).join(', '),
+          userName: item.users[0]?.name || '',
           phoneNumber: item.users.map((user) => user.phoneNumber).join(', '),
           location: item.users.map((user) => user.location).join(', '),
           department: item.users.map((user) => user.department).join(', '),
-        }));
+        }))
+        .sort((a, b) => b.id - a.id);
 
       setRows(formattedData);
 
-      if (responseData.header.responseCode === '0') {
-        showSnackbar(0, responseData.header.responseStatus);
-      }
+      // if (responseData.header.responseCode === '0') {
+      //   showSnackbar(0, responseData.header.responseStatus);
+      // }
+
     } catch (error) {
       console.error('Error fetching data:', error);
-      showSnackbar(1, 'Error Message');
+      
     }
   };
 
@@ -69,21 +70,7 @@ const IncidentTable = () => {
     loadIncidents();
   }, []);
 
-  // handling opening and closing of SnackBar 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarColor, setSnackbarColor] = useState('success'); 
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
-  const showSnackbar = (responseCode, responseStatus) => {
-    setSnackbarMessage(responseStatus);
-    setSnackbarColor(responseCode);
-    setSnackbarOpen(true);
-  };
-
+  
   // handling delete button to be able to delete the details
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -142,6 +129,12 @@ const IncidentTable = () => {
     {
       field: 'deviceName',
       headerName: 'Device Name',
+      flex: 1,
+      cellClassName: 'name-column--cell',
+    },
+    {
+      field: 'userName',
+      headerName: 'User Name',
       flex: 1,
       cellClassName: 'name-column--cell',
     },
@@ -235,7 +228,6 @@ const IncidentTable = () => {
         onClose={handleDeleteDialogClose}
         incidentId={selectedIncidentId}
         loadIncidents={loadIncidents}
-        showSnackbar={showSnackbar}
       />
 
       
@@ -275,13 +267,7 @@ const IncidentTable = () => {
         </Box>
       </Box>
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        message={snackbarMessage}
-        sx={{ backgroundColor: snackbarColor }}
-      />
+      
     </Box>
   );
 };

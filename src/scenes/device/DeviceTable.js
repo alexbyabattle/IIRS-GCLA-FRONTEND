@@ -8,7 +8,6 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { Delete } from "@mui/icons-material";
 import DeviceEditDialog from './DeviceEditDialog';
-import DeviceDetails from './DeviceDetails';
 import DeleteDialog from './DeviceDeleteDialog';
 import { tokens } from "../../theme";
 import { useTheme } from "@mui/material";
@@ -57,7 +56,8 @@ const DeviceTable = () => {
         status: item.status,
 
 
-      }));
+      }))
+      .sort((a, b) => b.id - a.id);
 
       setRows(formattedData);
 

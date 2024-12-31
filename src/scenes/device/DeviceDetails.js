@@ -4,13 +4,11 @@ import {
   Typography,
   Box,
   IconButton,
-  Snackbar,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { AddToQueue, DoDisturbOn } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
 import MyFormDialog from './DeviceAssignmentDialog';
-import ChangeStatusDialog from './ChangeDeviceStatus';
 import { useTheme } from '@mui/material';
 import UnassignDialog from './DeviceUnassignmentDialog';
 import image from '../../data/image';
@@ -69,19 +67,6 @@ const DeviceDetails = () => {
 
 
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarColor, setSnackbarColor] = useState('success');
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
-  const showSnackbar = (responseCode, responseStatus) => {
-    setSnackbarMessage(responseStatus);
-    setSnackbarColor(responseCode);
-    setSnackbarOpen(true);
-  };
 
   return (
     <Box elevation={3}>
@@ -228,7 +213,6 @@ const DeviceDetails = () => {
         onClose={() => setIsDialogOpen(false)}
         loadDeviceDetails={loadDeviceDetails}
         selectedDevices={[id]}
-        showSnackbar={showSnackbar}
       />
 
       <UnassignDialog
@@ -236,17 +220,10 @@ const DeviceDetails = () => {
         onClose={() => setIsUnassignDialogOpen(false)}
         loadDeviceDetails={loadDeviceDetails}
         selectedDevices={[id]}
-        showSnackbar={showSnackbar}
       />
 
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        message={snackbarMessage}
-        sx={{ backgroundColor: snackbarColor }}
-      />
+     
     </Box>
   );
 };
