@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     Button,
     Dialog,
+    DialogTitle,
     DialogContent,
-    DialogActions,
     Typography,
     Box,
     Snackbar,
     Alert,
-    useTheme
+    useTheme,
 } from '@mui/material';
 import { tokens } from "../../theme";
-import StatBox from '../../components/StatBox';
-import { TrafficOutlined } from '@mui/icons-material';
+import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 const dialogContentStyle = {
     display: 'flex',
@@ -21,56 +21,114 @@ const dialogContentStyle = {
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '80px',
+    paddingTop: '20px',
 };
 
-function NotificationBarDialog({ open, onClose, incidentId, loadIncidentDetails, incidentData, loadIncidents }) {
-
+const NotificationBarDialog = ({ open, onClose, onIncidentCountUpdate }) => {
+    const [details, setDetails] = useState([]);
+    const [userDetails, setUserDetails] = useState(null); // State for user details
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+    const navigate = useNavigate();
+
+    // Handling Snackbar close
     const handleSnackbarClose = () => {
         setSnackbar({ ...snackbar, open: false });
     };
 
-    const updateIncidentStatus = () => {
-        console.log('Incident Data:', incidentData);
 
-        const updateStatusEndpoint = `http://localhost:8082/api/incident/status/${incidentId}`;
 
-        const payload = {
-            id: incidentId,
-            status: incidentData.status === 'PENDING' ? 'SOLVED' : 'PENDING',
+    // Fetch user details from token
+    const getUserDetailsFromToken = () => {
+        const accessToken = localStorage.getItem('accessToken');
+        if (accessToken) {
+            try {
+                const decodedToken = jwtDecode(accessToken);
+                const { id, role, department } = decodedToken;
+                return { id, role, department };
+            } catch (error) {
+                console.error('Error decoding token:', error);
+            }
+        }
+        return null;
+    };
+
+
+
+    const role = userDetails?.role;
+    const department = userDetails?.department;
+
+    const openIncidentDetailsPage = (incidentId) => {
+        if (incidentId) {
+            if ((role === "ADMIN" || role === "MANAGER") && department === "IT") {
+                navigate(`/incidentDetails/${incidentId}`);
+            } else if ((role === "USER" || role === "MANAGER") && department !== "IT") {
+                navigate(`/incidentForm/${incidentId}`);
+            }
+        }
+        if (onClose) {
+            onClose();
+        }
+    };
+
+
+    // Fetch incidents when userDetails are available
+    const loadIncidents = async () => {
+        if (!userDetails) return;
+
+        const { id } = userDetails;
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (!accessToken || !id) {
+            console.error('Access token or user ID not found in local storage');
+            return;
+        }
+
+        const config = {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
         };
 
-        axios
-            .put(updateStatusEndpoint, payload)
-            .then((response) => {
-                if (response.status === 200) {
-                    setSnackbar({
-                        open: true,
-                        message: 'Incident status updated successfully',
-                        severity: 'success',
-                    });
-                    loadIncidentDetails();
-                    loadIncidents();
-                    onClose();
-                } else {
-                    setSnackbar({
-                        open: true,
-                        message: 'Failed to update incident status',
-                        severity: 'error',
-                    });
-                    onClose();
-                    console.error('Error: Something went wrong with the API request');
-                }
-            })
-            .catch((error) => {
-                console.error('Error updating incident status:', error);
-                console.error('Response data:', error.response?.data);
-                onClose();
-            });
+        try {
+            const response = await axios.get(`http://localhost:8082/api/incident/list/${id}`, config);
+            const responseData = response.data;
+            const formattedData = responseData.data
+                ? responseData.data
+                    .filter((item) => ['pending'].includes(item.status.toLowerCase()))
+                    .map((item) => ({
+                        id: item.id,
+                        incidentTitle: item.incidentTitle,
+                        incidentType: item.incidentType,
+                        status: item.status,
+                        deviceName: item.devices.map((device) => device.deviceName).join(', '),
+                    })) : []
+                        .sort((a, b) => b.id - a.id);
+
+            setDetails(formattedData);
+
+            // Pass the total count of incidents to the parent
+            if (onIncidentCountUpdate) {
+                onIncidentCountUpdate(formattedData.length);
+            }
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
+
+    useEffect(() => {
+        const fetchedUserDetails = getUserDetailsFromToken();
+        setUserDetails(fetchedUserDetails);
+    }, []); // This will run only once on component mount
+
+    useEffect(() => {
+        if (userDetails) {
+            loadIncidents();
+        }
+    }, [userDetails]); // Only run when userDetails is available
 
     return (
         <>
@@ -82,37 +140,73 @@ function NotificationBarDialog({ open, onClose, incidentId, loadIncidentDetails,
                 PaperProps={{
                     style: {
                         position: 'absolute',
-                        top: '50px', // Adjust as per the height of the notifications bar
+                        top: '50px',
                         right: '20px',
                         margin: 0,
                     },
                 }}
             >
-                <DialogContent style={dialogContentStyle}>
-                    <Typography variant="body1">ASSIGNED TASKS</Typography>
-                    <Box
-                        backgroundColor={colors.primary[400]}
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                    >
-                        <StatBox
-                            title="GCLA"
-                            subtitle="device management"
-                            
-                            increase="priority"
-                            icon={
-                                <TrafficOutlined
-                                    sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-                                />
-                            }
-                        /> 
-                    </Box>
+                <DialogTitle style={{ textAlign: 'center', fontWeight: 'bold', padding: '5px' }}>
+                    ASSIGNED TASKS
+                </DialogTitle>
 
+                <DialogContent style={dialogContentStyle}>
+                    {details.map((detail) => (
+                        <Box
+                            key={detail.id}
+                            mb={2}
+                            p={1}
+                            style={{
+                                backgroundColor: colors.primary[700],
+                                borderRadius: '8px',
+                                width: '100%',
+                            }}
+                        >
+                            <Typography variant="body2">
+                                <strong>Incident Title: </strong> {detail.incidentTitle}
+                            </Typography>
+                            <Box
+                                key={detail.id}
+                                style={{
+                                    backgroundColor: colors.primary[700],
+                                    borderRadius: '8px',
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Typography variant="body2">
+                                    <strong> Device Name: </strong> {detail.deviceName}
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        backgroundColor: 'red',
+                                        color: 'white',
+                                        padding: '1px 3px',
+                                        borderRadius: '2px',
+                                        display: 'inline-block',
+                                    }}
+                                >
+                                    {detail.status}
+                                </Typography>
+
+                                <Button
+                                    onClick={() => openIncidentDetailsPage(detail.id)}
+                                    color="secondary"
+                                    variant="contained"
+                                    sx={{ width: "60px", height: "17px" }}
+                                >
+                                    View
+                                </Button>
+                            </Box>
+                        </Box>
+                    ))}
                 </DialogContent>
             </Dialog>
 
-            {/* Snackbar for feedback messages */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={4000}
@@ -125,6 +219,6 @@ function NotificationBarDialog({ open, onClose, incidentId, loadIncidentDetails,
             </Snackbar>
         </>
     );
-}
+};
 
 export default NotificationBarDialog;

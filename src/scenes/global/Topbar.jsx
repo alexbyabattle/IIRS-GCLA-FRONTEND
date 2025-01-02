@@ -1,4 +1,4 @@
-import { Box, IconButton, useTheme } from "@mui/material";
+import { Box, IconButton, useTheme , Badge } from "@mui/material";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { ColorModeContext, tokens } from "../../theme";
@@ -16,6 +16,9 @@ const Topbar = () => {
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const navigate = useNavigate(); // Initialize useNavigate
+  const [incidentCount, setIncidentCount] = useState(0);
+
+  const handleIncidentCountUpdate = (count) => setIncidentCount(count);
 
   const getUserDetailsFromToken = () => {
     const accessToken = localStorage.getItem('accessToken');
@@ -100,8 +103,10 @@ const Topbar = () => {
             <PersonOutlinedIcon />
           </IconButton>
           <IconButton onClick={handleNotificationDialogOpen}>
-            <Notifications />
-          </IconButton>
+                <Badge badgeContent={incidentCount} color="secondary">
+                    <Notifications />
+                </Badge>
+            </IconButton>
           <IconButton onClick={handleLogoutDialogOpen}>
             <Logout />
           </IconButton>
@@ -119,7 +124,7 @@ const Topbar = () => {
       <NotificationBarDialog
         open={notificationDialogOpen}
         onClose={handleNotificationDialogClose}
-        
+        onIncidentCountUpdate={handleIncidentCountUpdate}
       />
 
 
